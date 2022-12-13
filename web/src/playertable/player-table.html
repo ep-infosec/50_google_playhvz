@@ -1,0 +1,253 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<dom-module id="ghvz-player-table">
+  <script>
+    // Not sure why this HTMLImports.whenReady is really needed.
+    // Something about polymer initialization order.
+    // I think we're not supposed to need this.
+    HTMLImports.whenReady(() => {
+      Polymer({
+        is: 'ghvz-player-table',
+
+        properties: {
+          bridge: Object,
+
+          rewardCategoriesById: Object,
+
+          game: Object,
+
+          players: {
+            type: Array,
+            value: function() { return []; },
+          },
+
+          playersById: {
+            type: Object,
+          },
+        },
+
+        makeTableBlueprint_: function() {
+          return {
+            itemsRepeater: this.$.repeater,
+            columns: [
+              {
+                property: "number",
+                name: "#",
+                sortable: true,
+                filterable: true
+              },
+              {
+                name: "Name",
+                sortable: true,
+                filterable: true,
+                property: "name",
+              },
+              {
+                name: "Allegiance",
+                sortable: true,
+                filterable: true,
+                property: "allegiance",
+              },
+              {
+                name: "Equipment",
+                sortable: true,
+                filterable: true,
+                property: "gotEquipment",
+                filter: (item, text) => {
+                  var equipmentText = "no";
+                  if (item.private.gotEquipment) {
+                    equipmentText = "yes";
+                  }
+                  return equipmentText.indexOf(text.toLowerCase()) !== -1;
+                },
+                getModel: (player) => player.private.gotEquipment,
+              },
+              {
+                name: "Extra",
+                sortable: true,
+                filterable: true,
+                getModel: (player) => {
+                  // Keep this code in sync with player-table.html
+                  // TODO: Find a place to combine these
+                  let sections = [];
+                  if (player.private) {
+                    if (player.private.notes)
+                      sections.push('"' + player.private.notes + '"');
+                    if (!player.private.beInPhotos)
+                      sections.push('!Photos');
+                    if (player.private.wantToBeSecretZombie)
+                      sections.push('WP');
+                  }
+                  if (!player.isActive)
+                    sections.push('!Active');
+                  return sections.join(' ');
+                }
+              },
+            ],
+            actions: [
+              {
+                action: "infect",
+                name: "Infect",
+                handler: (players) => {
+                  Promise.all(
+                      players.map((player) => {
+                        this.bridge.infect({
+                          gameId: this.game.id,
+                          infectorPlayerId: null,
+                          infectionId: this.bridge.newInfectionId(),
+                          victimLifeCode: null,
+                          victimPlayerId: player.id,
+                        });
+                      }))
+                      .then(() => {
+                        this.fire(
+                            'ghvz-alert',
+                            {
+                              message:
+                                  "Successfully infected these players: " +
+                                  players.map(p => p.name).join(" ")
+                            });
+                      });
+                },
+              },
+              {
+                action: "revive",
+                name: "Add Life",
+                handler: (players) => {
+                  Promise.all(
+                      players.map((player) => {
+                        return this.bridge.addLife({
+                          gameId: this.game.id,
+                          playerId: player.id,
+                          lifeId: this.bridge.newPublicLifeId(),
+                          privateLifeId: null,
+                          lifeCode: null,
+                        });
+                      }))
+                      .then(() => {
+                        this.fire(
+                            'ghvz-alert',
+                            {
+                              message:
+                                  "Successfully added one life each to these players: " +
+                                  players.map(p => p.name).join(" ")
+                            });
+                      });
+                },
+              },
+              {
+                action: "addToGroup",
+                name: "Add to Group",
+                handler: (players) => {
+                  Promise.all(
+                      players.map((player) => {
+                        this.$.addToGroupForm.openForAdding()
+                            .then((properties) => {
+                              this.bridge.addPlayerToGroup({
+                                gameId: this.game.id,
+                                actingPlayerId: null,
+                                playerToAddId: player.id,
+                                groupId: properties.groupId,
+                              });
+                            });
+                      }))
+                      .then(() => {
+                        this.fire('ghvz-alert', {message: "Successfully added to group these players: " + players.map(p => p.name).join(" ")});
+                      });
+                },
+              },
+              {
+                name: "Set Got Equipment",
+                handler: (players) => {
+                  for (let player of players) {
+                    this.bridge.updatePlayer({
+                      gameId: this.game.id,
+                      playerId: player.id,
+                      gotEquipment: true,
+                    });
+                  }
+                }
+              },
+              {
+                name: "Unset Got Equipment",
+                handler: (players) => {
+                  for (let player of players) {
+                    this.bridge.updatePlayer({
+                      gameId: this.game.id,
+                      playerId: player.id,
+                      gotEquipment: false,
+                    });
+                  }
+                }
+              },
+              {
+                name: "Set Notes",
+                handler: (players) => {
+                  for (let player of players) {
+                    this.$.notesForm.openForAdding()
+                        .then((properties) => {
+                          this.bridge.updatePlayer({
+                            gameId: this.game.id,
+                            playerId: player.id,
+                            notes: properties.notes,
+                          });
+                        });
+                  }
+                }
+              },
+            ],
+          };
+        },
+
+      });
+    });
+  </script>
+  <template>
+
+    <ghvz-super-form
+        id="notesForm"
+        type-name="Notes"
+        is-mobile="[[isMobile]]"
+        blueprint='{"fields": [{"property": "notes", "type": "string"}]}'
+        submit-on-enter>
+    </ghvz-super-form>
+
+    <ghvz-super-form
+        id="addToGroupForm"
+        game="[[game]]"
+        type-name="Game"
+        is-mobile="[[isMobile]]"
+        blueprint='{"fields": [{"property": "groupId", "type": "group"}]}'
+        submit-on-enter>
+    </ghvz-super-form>
+
+    <ghvz-table
+        name="player-table"
+        selectable
+        blueprint="[[makeTableBlueprint_()]]"
+        items="[[players]]">
+      <template is="dom-repeat" id="repeater" items="[[players]]" as="player" initial-count="1" target-framerate="5">
+        <ghvz-player-row
+            name$="player-row-[[player.name]]"
+            game="[[game]]"
+            reward-categories-by-id="[[rewardCategoriesById]]"
+            player="[[player]]">
+        </ghvz-player-row>
+      </template>
+    </ghvz-table>
+  </template>
+</dom-module>

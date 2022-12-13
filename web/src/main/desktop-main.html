@@ -1,0 +1,229 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<dom-module id="ghvz-desktop-main-page">
+  <script>
+    // Not sure why this HTMLImports.whenReady is really needed.
+    // Something about polymer initialization order.
+    // I think we're not supposed to need this.
+    HTMLImports.whenReady(() => {
+      Polymer({
+        is: 'ghvz-desktop-main-page',
+
+        properties: {
+          bridge: Object,
+          database: Object,
+          user: String,
+          game: String,
+          player: Object,
+          isMobile: Boolean,
+          isAdmin: Boolean,
+
+          isPlayer: {
+            type: Boolean,
+            computed: 'computeIsPlayer_(player)',
+          },
+
+          isDeclared: {
+            type: Boolean,
+            computed: 'computeIsDeclared_(player.allegiance)',
+          },
+
+          canDeclare: {
+            type: Boolean,
+            computed: 'computeCanDeclare_(player.allegiance)',
+          },
+
+          canJoinGame: {
+            type: Boolean,
+            computed: 'computeCanJoinGame_(game, player)',
+          },
+
+          canSelfInfect: {
+            type: Boolean,
+            computed: 'computeCanSelfInfect_(player.allegiance)',
+          },
+
+          isZombie: {
+            type: Boolean,
+            computed: 'computeIsZombie_(player.allegiance)',
+          },
+        },
+
+        computeCanDeclare_(allegiance) {
+          return allegiance == 'undeclared';
+        },
+
+        computeIsDeclared_(allegiance) {
+          return allegiance == 'resistance' || allegiance == 'horde';
+        },
+
+        computeCanSelfInfect_: function (allegiance) {
+          return allegiance == 'resistance';
+        },
+
+        computeCanJoinGame_(game, player) {
+          return game && !player;
+        },
+
+        computeIsPlayer_(player) {
+          return !!player;
+        },
+
+        computeIsZombie_(allegiance) {
+          return allegiance == 'horde';
+        },
+
+        joinGame_() {
+          this.fire('ghvz-set-path', {
+            inGame: true,
+            path: ['joinGame'],
+            replace: false,
+          });
+        },
+
+        chatIsVisible_(membership) {
+          return ChatUtils.chatIsVisible(this.game.chatRoomsById[membership.chatRoomId], membership);
+        },
+      });
+    });
+  </script>
+  <style>
+    :host {
+      display: block;
+      position: relative;
+    }
+
+    .content {
+      margin: 16px;
+    }
+
+    #viewControls paper-checkbox {
+      margin-left: 16px;
+    }
+
+    #topControls {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 16px;
+      align-items: center;
+    }
+
+    #info {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 16px;
+      align-items: center;
+    }
+
+    .info {
+      margin-left: 32px;
+      text-align: center;
+    }
+
+    paper-button {
+      background-color: var(--app_color_primary);
+      color: var(--app_color_text_on_primary_background);
+    }
+
+    #welcome {
+      margin-bottom: 8px;
+    }
+  </style>
+  <template>
+    <ghvz-dashboard>
+
+      <ghvz-help-page name="help-box" right></ghvz-help-page>
+
+      <template is="dom-if" if="[[canJoinGame]]">
+        <ghvz-card spaced full padded name="join-box">
+          <div class="header">Join Game!</div>
+          <div>
+            <div id="welcome">Welcome to playhvz.com! Click the button to join the game.</div>
+            <paper-button name="joinGame" raised on-tap="joinGame_">Join Game!</paper-button>
+          </div>
+        </ghvz-card>
+      </template>
+
+      <template is="dom-if" if="[[canDeclare]]">
+        <ghvz-card spaced left padded name="declare-box">
+          <div class="header">Declare Allegiance!</div>
+          <ghvz-declare-dashlet></ghvz-declare-dashlet>
+        </ghvz-card>
+      </template>
+
+      <template is="dom-if" if="[[isPlayer]]">
+
+        <template is="dom-if" if="[[isZombie]]">
+          <ghvz-card name="infect-box" spaced left>
+            <div class="header">Infect</div>
+            <ghvz-infect bridge="[[bridge]]" game="[[game]]" player="[[player]]"">
+            </ghvz-infect>
+          </ghvz-card>
+        </template>
+
+        <template is=" dom-if" if="[[isDeclared]]">
+              <ghvz-card spaced left padded name="next-mission-box">
+                <div class="header">Next Mission</div>
+                <ghvz-next-mission bridge="[[bridge]]" game="[[game]]" player="[[player]]">
+                </ghvz-next-mission>
+              </ghvz-card>
+        </template>
+
+        <ghvz-card spaced left padded name="summary-box">
+          <div class="header">Game Summary</div>
+          <ghvz-game-summary is-mobile="[[isMobile]]" game="[[game]]">
+          </ghvz-game-summary>
+        </ghvz-card>
+
+        <ghvz-card spaced scrolling left name="leaderboard-box">
+          <div class="header">Leaderboard</div>
+          <ghvz-leaderboard-summary game="[[game]]" limit="3">
+          </ghvz-leaderboard-summary>
+        </ghvz-card>
+
+        <template is="dom-if" if="[[isDeclared]]">
+          <ghvz-card spaced left fullscreen-page="stats" name="stats-box">
+            <div class="header">Game Stats</div>
+            <ghvz-game-stat-summary game="[[game]]">
+            </ghvz-game-stat-summary>
+          </ghvz-card>
+        </template>
+
+        <template is="dom-if" if="[[isDeclared]]">
+          <ghvz-card name="rewards-box" spaced left>
+            <div class="header">Rewards</div>
+            <ghvz-claim-reward bridge="[[bridge]]" game="[[game]]" player="[[player]]">
+            </ghvz-claim-reward>
+          </ghvz-card>
+        </template>
+
+        <template is="dom-repeat" items="[[player.private.chatRoomMemberships]]" as="membership">
+          <div right>
+            <template is="dom-if" if="[[chatIsVisible_(membership, membership.lastHiddenTime)]]">
+              <ghvz-card spaced>
+                <ghvz-chat-room small bridge="[[bridge]]" game="[[game]]" is-admin="[[isAdmin]]"
+                  current-player="[[player]]" chat-room-id="[[membership.chatRoomId]]">
+                </ghvz-chat-room>
+              </ghvz-card>
+            </template>
+          </div>
+        </template>
+      </template>
+
+    </ghvz-dashboard>
+  </template>
+</dom-module>

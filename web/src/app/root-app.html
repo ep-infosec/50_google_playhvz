@@ -1,0 +1,132 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<dom-module id="ghvz-root-app">
+  <script>
+    // Not sure why this HTMLImports.whenReady is really needed.
+    // Something about polymer initialization order.
+    // I think we're not supposed to need this.
+    HTMLImports.whenReady(() => {
+      Polymer({
+        is: 'ghvz-root-app',
+
+        properties: {
+          bridgeType: {
+            type: String,
+            value: () => {
+              // TODO: Uncomment this when we're ready to support the fake server again.
+              var defaultBridgeType = null;
+              if (window.location.hostname.includes("localhost") ||
+                window.location.hostname.includes("127.0.0.1")) {
+                defaultBridgeType = 'fake';
+              } else {
+                defaultBridgeType = 'remote';
+              }
+              var bridgeType = Utils.getParameterByName('bridge', defaultBridgeType);
+              if (bridgeType != 'fake' && bridgeType != 'remote') {
+                this.fire('ghvz-alert', { message: "'bridge' must either be 'fake' or 'remote'! Falling back to fake." });
+                bridgeType = 'fake';
+              }
+              return bridgeType;
+            },
+          },
+
+          config: {
+            type: Object,
+            value: undefined,
+          },
+        },
+
+        listeners: {
+          'ghvz-alert': 'showAlert_',
+        },
+
+        isRealEnv(bridgeType) {
+          return bridgeType == 'remote';
+        },
+
+        isFakeEnv(bridgeType) {
+          return !this.isRealEnv(bridgeType);
+        },
+
+        attached() {
+          let ajaxRequest = new XMLHttpRequest();
+          ajaxRequest.open('GET', '/config.json', true);
+          ajaxRequest.send();
+          ajaxRequest.onreadystatechange = () => {
+            if (ajaxRequest.readyState == XMLHttpRequest.DONE) {
+              let config;
+              try {
+                if (ajaxRequest.status == 404) {
+                  throw "Couldn't find config.json! See README.md for steps on setting up!";
+                }
+                if (ajaxRequest.status != 200) {
+                  throw "Unknown error getting config.json.";
+                }
+                config = JSON.parse(ajaxRequest.responseText);
+
+                if (!('backendUrl' in config)) {
+                  throw "Couldn't find backendUrl!"
+                }
+                if (!('firebaseConfig' in config)) {
+                  throw "Couldn't find firebaseConfig!"
+                }
+                if (!('fakeUserIds' in config)) {
+                  throw "Couldn't find fakeUserIds!"
+                }
+
+                this.async(() => {
+                  this.config = config;
+                });
+
+              } catch (e) {
+                console.error("Got exception:", e);
+                console.error("Received config response:", ajaxRequest.responseText);
+                console.error("Attempted parsed json:", config);
+                this.fire('ghvz-alert', { message: "Problems getting config: " + e });
+              }
+            }
+          };
+        },
+
+        showAlert_(e) {
+          this.$.alert.open(e.detail.message)
+            .then(e.detail.callback);
+        }
+      });
+    });
+  </script>
+  <style>
+    :host {
+      display: flex;
+      flex-direction: column;
+    }
+
+    ghvz-real-app,
+    ghvz-fake-app {
+      flex-grow: 1;
+    }
+  </style>
+  <template>
+    <ghvz-alert id="alert"></ghvz-alert>
+
+    <template is="dom-if" if="[[isRealEnv(bridgeType)]]">
+      <ghvz-real-app id="realApp" config="[[config]]"></ghvz-real-app>
+    </template>
+    <template is="dom-if" if="[[isFakeEnv(bridgeType)]]">
+      <ghvz-fake-app config="[[config]]"></ghvz-fake-app>
+    </template>
+  </template>
+</dom-module>

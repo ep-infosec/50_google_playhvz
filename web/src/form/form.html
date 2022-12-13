@@ -1,0 +1,179 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<dom-module id="ghvz-form">
+  <script>
+    // Not sure why this HTMLImports.whenReady is really needed.
+    // Something about polymer initialization order.
+    // I think we're not supposed to need this.
+    HTMLImports.whenReady(() => {
+      Polymer({
+        is: 'ghvz-form',
+
+        properties: {
+          title: {
+            type: String,
+            value: ""
+          },
+
+          openLabel: {
+            type: String,
+            value: "",
+          },
+
+          openIcon: {
+            type: String,
+            value: "",
+          },
+
+          closeLabel: {
+            type: String,
+            value: "",
+          },
+
+          doneLabel: {
+            type: String,
+            value: "",
+          },
+
+          doneEnabled: {
+            type: Boolean,
+            value: true,
+          },
+          typeName: String,
+          submitOnEnter: Boolean,
+        },
+
+        listeners: {
+          'keyup': 'onKeyUp_',
+        },
+
+        attached() {
+          this.reset();
+        },
+
+        open() {
+          this.$.dialog.open();
+        },
+
+        opened_(e) {
+          if (e.target == this.$.dialog) {
+            let inputs = this.querySelectorAll('input, paper-input, paper-button, paper-checkbox, paper-textarea, ghvz-timestamp-picker');
+            if (!inputs.length)
+              return;
+            let input = inputs[0];
+            switch (input.tagName.toLowerCase()) {
+              case 'input':
+              case 'paper-button':
+                input.focus();
+                break;
+              case 'ghvz-timestamp-picker':
+                input.focus();
+                break;
+              case 'paper-textarea':
+              case 'paper-input':
+              default:
+                input.$.input.focus();
+                break;
+            }
+          }
+        },
+
+        closed_(e) {
+          if (e.target == this.$.dialog) {
+            if (e.detail.confirmed) {
+              this.finish_();
+            }
+            this.async(() => this.reset());
+          }
+        },
+
+        onKeyUp_(e) {
+          let enterPressed = e.key == 'Enter' && !e.shiftKey;
+          if (this.submitOnEnter && enterPressed && this.doneEnabled) {
+            this.$.dialog.close();
+            this.finish_();
+            this.async(() => this.reset());
+          }
+        },
+
+        finish_() {
+          this.fire('ghvz-form-done');
+        },
+
+        reset() {
+          this.$.form.reset();
+        },
+      });
+    });
+  </script>
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: 0;
+        padding-top: 0;
+        overflow-y: auto;
+      }
+
+      .button-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        margin: 8px;
+      }
+
+      paper-button {
+        background-color: var(--admin_color_primary);
+        color: var(--admin_color_text_on_primary_background);
+      }
+
+      #title {
+        margin-top: 0;
+        color: var(--admin_color_text_on_primary_background);
+        background-color: var(--admin_color_primary);
+        font-size: 13pt;
+        padding: 16px;
+        font-weight: bold;
+      }
+
+      #dialog {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+
+    <paper-dialog id="dialog" modal on-iron-overlay-opened="opened_" on-iron-overlay-closed="closed_">
+      <template is="dom-if" if="[[title]]">
+        <div id="title">
+          [[title]]
+        </div>
+      </template>
+      <form is="iron-form" id="form">
+        <content></content>
+      </form>
+      <div name$="form-buttons-[[typeName]]" class="buttons">
+        <paper-button id="cancel" dialog-dismiss>[[closeLabel]]</paper-button>
+        <paper-button id="done" dialog-confirm disabled="[[!doneEnabled]]" autofocus>[[doneLabel]]</paper-button>
+      </div>
+    </paper-dialog>
+  </template>
+</dom-module>

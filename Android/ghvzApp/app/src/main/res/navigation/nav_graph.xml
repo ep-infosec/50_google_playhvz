@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright 2020 Google Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/nav_graph"
+  app:startDestination="@id/nav_game_list_fragment">
+
+  <action
+    android:id="@+id/action_global_nav_game_dashboard_fragment"
+    app:destination="@id/nav_game_dashboard_fragment"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_graph"
+    app:popUpToInclusive="true" />
+
+  <action
+    android:id="@+id/action_global_nav_game_settings_fragment"
+    app:destination="@id/nav_game_settings_fragment"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_graph"
+    app:popUpToInclusive="true" />
+
+  <action
+    android:id="@+id/action_global_nav_game_list_fragment"
+    app:destination="@id/nav_game_list_fragment"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_graph"
+    app:popUpToInclusive="true" />
+
+  <action
+    android:id="@+id/action_global_nav_player_profile_fragment"
+    app:destination="@id/nav_player_profile_fragment"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_graph"
+    app:popUpToInclusive="true" />
+
+  <action
+    android:id="@+id/action_global_nav_chat_list_fragment"
+    app:destination="@id/nav_chat_list_fragment"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_graph"
+    app:popUpToInclusive="true" />
+
+  <action
+    android:id="@+id/action_global_nav_admin_chat_list_fragment"
+    app:destination="@id/nav_admin_chat_list_fragment"
+    app:launchSingleTop="true" />
+
+  <action
+    android:id="@+id/action_global_nav_mission_dashboard_fragment"
+    app:destination="@id/nav_mission_dashboard_fragment"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_graph"
+    app:popUpToInclusive="true" />
+
+  <action
+    android:id="@+id/action_global_nav_mission_settings_fragment"
+    app:destination="@id/nav_mission_settings_fragment"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_mission_dashboard_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_chat_room_fragment"
+    app:destination="@id/nav_chat_room_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_chat_info_fragment"
+    app:destination="@id/nav_chat_info_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_declare_allegiance_fragment"
+    app:destination="@id/nav_declare_allegiance_fragment"
+    app:popUpTo="@+id/nav_graph"
+    app:popUpToInclusive="true" />
+
+  <action
+    android:id="@+id/action_global_nav_rules_fragment"
+    app:destination="@id/nav_rules_fragment">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.rules_faq.CollapsibleListFragment$CollapsibleFragmentType" />
+  </action>
+
+  <action
+    android:id="@+id/action_global_nav_faq_fragment"
+    app:destination="@id/nav_faq_fragment">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.rules_faq.CollapsibleListFragment$CollapsibleFragmentType" />
+  </action>
+
+  <action android:id="@+id/nav_create_chat_with_admin" />
+
+  <action android:id="@+id/nav_find_player" />
+
+  <action
+    android:id="@+id/action_global_nav_redeem_reward_fragment"
+    app:destination="@id/nav_redeem_reward_fragment">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.redeemcode.RedeemCodeFragment$RedeemCodeFragmentType" />
+  </action>
+
+  <action
+    android:id="@+id/action_global_nav_redeem_lifecode_fragment"
+    app:destination="@id/nav_redeem_lifecode_fragment">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.redeemcode.RedeemCodeFragment$RedeemCodeFragmentType" />
+  </action>
+
+  <action
+    android:id="@+id/action_global_nav_reward_dashboard_fragment"
+    app:destination="@id/nav_reward_dashboard_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_reward_settings_fragment"
+    app:destination="@id/nav_reward_settings_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_quiz_dashboard_fragment"
+    app:destination="@id/nav_quiz_dashboard_fragment"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_game_dashboard_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_quiz_question_info_fragment"
+    app:destination="@id/nav_quiz_question_info_fragment"
+    app:popUpTo="@+id/nav_quiz_dashboard_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_quiz_question_multi_answer_fragment"
+    app:destination="@id/nav_quiz_question_multi_answer_fragment"
+    app:popUpTo="@+id/nav_quiz_dashboard_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_quiz_question_true_false_fragment"
+    app:destination="@id/nav_quiz_question_true_false_fragment"
+    app:popUpTo="@+id/nav_quiz_dashboard_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_take_quiz_fragment"
+    app:destination="@id/nav_take_quiz_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_leaderboard_fragment"
+    app:destination="@id/nav_leaderboard_fragment" />
+
+  <action
+    android:id="@+id/action_global_nav_game_stats_fragment"
+    app:destination="@id/nav_game_stats_fragment" />
+
+
+  <single_instance_fragment
+    android:id="@+id/nav_game_dashboard_fragment"
+    android:name="com.app.playhvz.screens.gamedashboard.GameDashboardFragment"
+    android:label="@string/navigation_drawer_game_dashboard"
+    app:launchSingleTop="true"
+    app:popUpTo="@+id/nav_graph"
+    app:popUpToInclusive="true">
+    <argument
+      android:name="gameId"
+      app:argType="string"
+      app:nullable="true" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_game_settings_fragment"
+    android:name="com.app.playhvz.screens.gamesettings.GameSettingsFragment"
+    android:label="@string/navigation_drawer_create_game"
+    tools:layout="@layout/fragment_game_settings">
+    <argument
+      android:name="gameId"
+      app:argType="string"
+      app:nullable="true" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_rules_fragment"
+    android:name="com.app.playhvz.screens.rules_faq.CollapsibleListFragment"
+    android:label="@string/navigation_drawer_rules"
+    tools:layout="@layout/fragment_collapsible_list">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.rules_faq.CollapsibleListFragment$CollapsibleFragmentType" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_faq_fragment"
+    android:name="com.app.playhvz.screens.rules_faq.CollapsibleListFragment"
+    android:label="@string/navigation_drawer_faq"
+    tools:layout="@layout/fragment_collapsible_list">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.rules_faq.CollapsibleListFragment$CollapsibleFragmentType" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_create_game_fragment"
+    android:name="com.app.playhvz.screens.gamesettings.GameSettingsFragment"
+    android:label="@string/navigation_drawer_create_game"
+    tools:layout="@layout/fragment_game_settings">
+    <argument
+      android:name="gameId"
+      app:argType="string"
+      app:nullable="true" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_game_list_fragment"
+    android:name="com.app.playhvz.screens.gamelist.GameListFragment"
+    android:label="@string/navigation_drawer_game_list"
+    tools:layout="@layout/fragment_game_list" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_chat_list_fragment"
+    android:name="com.app.playhvz.screens.chatlist.ChatListFragment"
+    tools:layout="@layout/fragment_chat_list" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_admin_chat_list_fragment"
+    android:name="com.app.playhvz.screens.chatlist.AdminChatListFragment"
+    tools:layout="@layout/fragment_chat_list" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_player_profile_fragment"
+    android:name="com.app.playhvz.screens.player.ProfileFragment"
+    tools:layout="@layout/fragment_player_profile">
+    <argument
+      android:name="gameId"
+      app:argType="string"
+      app:nullable="true" />
+    <argument
+      android:name="playerId"
+      app:argType="string"
+      app:nullable="true" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_chat_room_fragment"
+    android:name="com.app.playhvz.screens.chatroom.ChatRoomFragment">
+    <argument
+      android:name="chatRoomId"
+      app:argType="string"
+      app:nullable="false" />
+    <argument
+      android:name="playerId"
+      app:argType="string"
+      app:nullable="false" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_chat_info_fragment"
+    android:name="com.app.playhvz.screens.chatroom.chatinfo.ChatInfoFragment">
+    <argument
+      android:name="chatRoomId"
+      app:argType="string"
+      app:nullable="false" />
+    <argument
+      android:name="playerId"
+      app:argType="string"
+      app:nullable="false" />
+    <argument
+      android:name="isChatWithAdmins"
+      app:argType="boolean"
+      app:nullable="false" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_declare_allegiance_fragment"
+    android:name="com.app.playhvz.screens.declareallegiance.DeclareAllegianceFragment" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_mission_dashboard_fragment"
+    android:name="com.app.playhvz.screens.missions.MissionDashboardFragment"
+    tools:layout="@layout/fragment_mission_dashboard" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_mission_settings_fragment"
+    android:name="com.app.playhvz.screens.missions.missionsettings.MissionSettingsFragment">
+    <argument
+      android:name="missionId"
+      app:argType="string"
+      app:nullable="true" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_reward_dashboard_fragment"
+    android:name="com.app.playhvz.screens.rewards.RewardDashboardFragment"
+    android:label="@string/navigation_drawer_rewards"
+    tools:layout="@layout/fragment_mission_dashboard" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_reward_settings_fragment"
+    android:name="com.app.playhvz.screens.rewards.rewardsettings.RewardSettingsFragment">
+    <argument
+      android:name="rewardId"
+      app:argType="string"
+      app:nullable="true" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_redeem_reward_fragment"
+    android:name="com.app.playhvz.screens.redeemcode.RedeemCodeFragment"
+    android:label="@string/navigation_drawer_redeem_reward"
+    tools:layout="@layout/fragment_redeem_code">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.redeemcode.RedeemCodeFragment$RedeemCodeFragmentType" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_redeem_lifecode_fragment"
+    android:name="com.app.playhvz.screens.redeemcode.RedeemCodeFragment"
+    android:label="@string/navigation_drawer_infect_player"
+    tools:layout="@layout/fragment_redeem_code">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.redeemcode.RedeemCodeFragment$RedeemCodeFragmentType" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_quiz_dashboard_fragment"
+    android:name="com.app.playhvz.screens.quiz.QuizDashboardFragment"
+    android:label="@string/navigation_drawer_edit_quiz"
+    tools:layout="@layout/fragment_quiz_question_dashboard" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_quiz_question_info_fragment"
+    android:name="com.app.playhvz.screens.quiz.editablequestions.InfoQuestionFragment"
+    android:label="@string/quiz_info_question_title"
+    tools:layout="@layout/fragment_quiz_question_info">
+    <argument
+      android:name="questionId"
+      app:argType="string"
+      app:nullable="true" />
+    <argument
+      android:name="nextAvailableIndex"
+      android:defaultValue="-1"
+      app:argType="integer" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_quiz_question_multi_answer_fragment"
+    android:name="com.app.playhvz.screens.quiz.editablequestions.MultiAnswerQuestionFragment"
+    android:label="@string/quiz_order_question_title"
+    tools:layout="@layout/fragment_quiz_question_multi_answer">
+    <argument
+      android:name="fragmentType"
+      app:argType="com.app.playhvz.screens.quiz.editablequestions.MultiAnswerQuestionFragment$FragmentType" />
+    <argument
+      android:name="questionId"
+      app:argType="string"
+      app:nullable="true" />
+    <argument
+      android:name="nextAvailableIndex"
+      android:defaultValue="-1"
+      app:argType="integer" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_quiz_question_true_false_fragment"
+    android:name="com.app.playhvz.screens.quiz.editablequestions.TrueFalseQuestionFragment"
+    android:label="@string/quiz_true_false_question_title"
+    tools:layout="@layout/fragment_quiz_question_multi_answer">
+    <argument
+      android:name="questionId"
+      app:argType="string"
+      app:nullable="true" />
+    <argument
+      android:name="nextAvailableIndex"
+      android:defaultValue="-1"
+      app:argType="integer" />
+  </single_instance_fragment>
+
+  <single_instance_fragment
+    android:id="@+id/nav_take_quiz_fragment"
+    android:name="com.app.playhvz.screens.declareallegiance.TakeQuizFragment"
+    android:label="@string/take_quiz_title"
+    tools:layout="@layout/fragment_take_allegiance_quiz" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_leaderboard_fragment"
+    android:name="com.app.playhvz.screens.leaderboard.LeaderboardFragment"
+    android:label="@string/navigation_drawer_leaderboard"
+    tools:layout="@layout/fragment_leaderboard" />
+
+  <single_instance_fragment
+    android:id="@+id/nav_game_stats_fragment"
+    android:name="com.app.playhvz.screens.gamestats.GameStatsFragment"
+    android:label="@string/navigation_drawer_game_stats"
+    tools:layout="@layout/fragment_game_stats" />
+</navigation>

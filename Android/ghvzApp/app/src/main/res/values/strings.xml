@@ -1,0 +1,901 @@
+<!--
+  ~ Copyright 2020 Google Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<resources>
+  <!-- App constants -->
+  <string name="app_name">PlayHvZ</string>
+  <string name="server_client_id" translatable="false">999009690521-v4bfpi2jfo69n65v6ptj1p72o37g9jh1.apps.googleusercontent.com</string>
+  <string name="default_notification_channel_id" translatable="false">playhvz_default_channel</string>
+  <string name="default_notification_channel_name" defintion="This is the name users will see under Android system settings for app notifications.
+      It should describe the category of notifications that will be sent through this channel." translatable="true">
+    General Announcements
+  </string>
+  <string name="default_notification_title">From HvZ CDC</string>
+
+  <!-- String definitions, alphabetized. -->
+  <string name="allegiance_option_human" definition="Label for the radio button indicating human allegiance.">
+    Resistance
+  </string>
+
+  <string name="allegiance_option_zombie" definition="Label for the radio button indicating zombie allegiance.">
+    Horde
+  </string>
+
+  <string name="allegiance_option_undeclared" definition="Label for the radio button indicating undeclared allegiance.">
+    Undeclared
+  </string>
+
+  <string name="allegiance_option_everyone" definition="Label for the radio button indicating no allegiance filter.">
+    Everyone
+  </string>
+
+  <string name="allegiance_status_alive" definition="Status indicating the player is alive.">
+    Alive
+  </string>
+
+  <string name="allegiance_status_dead" definition="Status indicating the player is a zombie.">
+    Living dead
+  </string>
+
+  <string name="create_game_success_toast" definition="Toast shown when a game is successfully created.">
+    Created: %1$s
+  </string>
+
+  <string name="create_game_error_exists" definition="Error message shown when a game name already exists.">
+    %1$s already exists!
+  </string>
+
+  <string name="boolean_true" definition="True.">
+    True
+  </string>
+
+  <string name="boolean_false" definition="False.">
+    False
+  </string>
+
+  <string name="boolean_correct" definition="Correct.">
+    Correct
+  </string>
+
+  <string name="boolean_incorrect" definition="Incorrect.">
+    Incorrect
+  </string>
+
+  <string name="button_add" definition="Button to add selected item to a list or group.">
+    Add
+  </string>
+
+  <string name="button_back" definition="Button to select to go back to previous screen.">
+    Back
+  </string>
+
+  <string name="button_cancel" definition="Cancel button.">
+    Cancel
+  </string>
+
+  <string name="button_create" definition="Create button.">
+    Create
+  </string>
+
+  <string name="button_delete" definition="Delete button.">
+    Delete
+  </string>
+
+  <string name="button_dismiss" definition="Dismiss button.">
+    Dismiss
+  </string>
+
+  <string name="button_edit" definition="Edit button.">
+    Edit
+  </string>
+
+  <string name="button_move_up" definition="Move up button.">
+    Move up
+  </string>
+
+  <string name="button_move_down" definition="Move down button.">
+    Move down
+  </string>
+
+  <string name="button_remove_ordering" definition="Remove ordering button.">
+    Remove ordering
+  </string>
+
+  <string name="button_next" definition="Button to select when saving changes and going to the next screen.">
+    Next
+  </string>
+
+  <string name="button_set" definition="Button to set field to selected item.">
+    Set
+  </string>
+
+  <string name="button_submit" definition="Button to select when saving changes.">
+    Submit
+  </string>
+
+  <string name="button_refresh" definition="Refresh button.">
+    Refresh
+  </string>
+
+  <string name="button_update" definition="Button to select when saving changes.">
+    Update
+  </string>
+
+  <string name="button_use" definition="Button to select when saving changes.">
+    Use
+  </string>
+
+  <string name="chat_creation_checkbox_allegiance" definition="Label for the checkbox indicating if the room has an allegiance filter.">
+    Enforce members are only:
+  </string>
+
+  <string name="chat_creation_name_label" definition="Label for the chat room name input textview.">
+    Chat name
+  </string>
+
+  <string name="chat_creation_name_hint" definition="Hint text for the chat room name text input.">
+    Nerf Friends
+  </string>
+
+  <string name="chat_list_toolbar" definition="Toolbar title for the chat list view.">
+    Chats
+  </string>
+
+  <string name="chat_list_for_admin_toolbar" definition="Toolbar title for the admin chat list view.">
+    Admin chats
+  </string>
+
+  <string name="chat_room_toolbar" definition="Toolbar title for the chat room view if the room name won't load.">
+    Chat
+  </string>
+
+  <string name="chat_info_add_player" definition="Option to add a player to the chat room.">
+    Add player
+  </string>
+
+  <string name="chat_info_title" definition="Title for the chat info page.">
+    Options
+  </string>
+
+  <string name="chat_info_leave" definition="Option to leave the chat room.">
+    Leave
+  </string>
+
+  <string name="chat_info_leave_dialog_title" definition="Title for dialog confirming user wants to leave chat room.">
+    Really leave \'%1$s\'?
+  </string>
+
+  <string name="chat_info_leave_dialog_description" definition="Dialog message informing user they can't rejoin chat room after leaving.">
+    This can\'t be undone, you\'ll have to ask someone else to add you back.
+  </string>
+
+  <string name="chat_info_leave_dialog_with_admins_description" definition="Dialog message informing user they can rejoin chat room after leaving.">
+    You can rejoin, just click chat with an admin again.
+  </string>
+
+  <string name="chat_info_leave_dialog_confirmation" definition="Confirmation button for leave chat dialog.">
+    Yep, leave
+  </string>
+
+  <plurals name="chat_info_member_count" definition="String expressing the number of members in the chat room.">
+    <item quantity="one">%1$s member</item>
+    <item quantity="other">%1$s members</item>
+  </plurals>
+
+  <string name="chat_info_notifications_option" definition="Option to enable/disable notifications in the chat room.">
+    Allow notifications
+  </string>
+
+  <string name="chat_info_remove_dialog_title" definition="Title for dialog confirming user wants to remove player from chat room.">
+    Really remove %1$s?
+  </string>
+
+  <string name="chat_info_remove_dialog_description" definition="Dialog message informing user they can't rejoin chat room after removing player.">
+    They can\'t rejoin by themselves. They\'ll have to ask someone else to add them back.
+  </string>
+
+  <string name="chat_info_remove_dialog_confirmation" definition="Confirmation button for removing player chat dialog.">
+    Yep, remove
+  </string>
+
+  <string name="chat_input_hint" definition="Hint text for chat room message input.">
+    Message %1$s
+  </string>
+
+  <string name="collapsible_section_add_new" definition="Label for add new collapsible section button.">
+    Add new item
+  </string>
+
+  <string name="collapsible_section_title_hint_text" definition="Hint text for collapsible section title text.">
+    Add title
+  </string>
+
+  <string name="collapsible_section_content_hint_text" definition="Hint text for collapsible section content text.">
+    Add some content
+  </string>
+
+  <string name="collapsible_section_remove_dialog_title" definition="Title for the delete confirmation dialog.">
+    Really delete section?
+  </string>
+
+  <string name="collapsible_section_remove_dialog_content" definition="Description for the delete confirmation dialog.">
+    This can\'t be undone.
+  </string>
+
+  <string name="datetime_dialog_title" definition="Title for the date time selection dialog.">
+    Set date and time
+  </string>
+
+  <string name="datetime_dialog_selected_date" definition="Label for the selected date.">
+    Date: %1$s
+  </string>
+
+  <string name="declare_allegiance_card_title" definition="Card title for the declare allegiance widget.">
+    Declare Allegiance
+  </string>
+
+  <string name="declare_allegiance_card_description" definition="Description for the declare allegiance widget.">
+    Click below to declare your allegiance and start playing the game!
+  </string>
+
+  <string name="declare_allegiance_card_button_undeclare" definition="Button to undeclare allegiance.">
+    Undeclare
+  </string>
+
+  <string name="declare_allegiance_card_button" definition="Button to trigger declaring allegiance.">
+    Declare
+  </string>
+
+  <string name="declare_allegiance_human_button" definition="Button to declare human allegiance.">
+    Resistance
+  </string>
+
+  <string name="declare_allegiance_zombie_button" definition="Button to declare zombie allegiance.">
+    Horde
+  </string>
+
+  <string name="allegiance_all_button" definition="Menu option declaring no allegiance filter.">
+    All
+  </string>
+
+  <string name="error_whitespace" definition="Error text for input containing whitespace.">
+    No spaces allowed
+  </string>
+
+  <string name="force_upgrade_button" definition="Button for upgrading the app to a newer version.">
+    Upgrade
+  </string>
+
+  <string name="force_upgrade_header" definition="Label above the force upgrade image.">
+    Oh
+  </string>
+
+  <string name="force_upgrade_message" definition="Message telling the user they need to upgrade their app.">
+    Looks like your app is out of date, upgrade now to experience the wonder of our bug fixes!
+  </string>
+
+  <string name="game_list_create_game_button" definition="Create game button.">
+    Create game
+  </string>
+
+  <string name="game_list_join_game_button" definition="Join game button.">
+    Join game
+  </string>
+
+  <string name="game_list_empty" definition="Header for empty list suggesting user joins or creates a new game.">
+    Join the fun!
+  </string>
+
+  <string name="game_list_admin_header" definition="Header for the list showing games the user is an admin of.">
+    Admin
+  </string>
+
+  <string name="game_list_player_header" definition="Header for the list showing games the user is a player of.">
+    Your Games
+  </string>
+
+  <string name="game_settings_create_game_toolbar_title" definition="Title for the create game screen.">
+    New Game
+  </string>
+
+  <string name="game_settings_admin_list_title" definition="Title for section showing admins.">
+    Admins
+  </string>
+
+  <string name="game_settings_add_admin_button" definition="Button text for adding a new admin.">
+    Add admin
+  </string>
+
+  <string name="game_settings_admin_on_call_title" definition="Title for section showing admin on call.">
+    Admin On Call
+  </string>
+
+  <string name="game_settings_admin_on_call_description" definition="Description for section showing admin on call.">
+    This is the player account that will get notifications when someone pings the default admin account or tries to \"Chat with an Admin\".
+  </string>
+
+  <string name="game_settings_delete_dialog_title" definition="Title for delete game dialog.">
+    Really delete \'%1$s\'?
+  </string>
+
+  <string name="game_settings_delete_dialog_description" definition="Description for delete game dialog.">
+    This action can\'t be undone…
+  </string>
+
+  <string name="game_settings_delete_dialog_confirmation" definition="Confirmation button for delete game dialog.">
+    Delete forever
+  </string>
+
+  <string name="game_settings_delete_dialog_cancel" definition="Cancel button for delete game dialog.">
+    Keep game
+  </string>
+
+  <string name="game_settings_game_name_label" definition="Label for game title text input.">
+    Name
+  </string>
+
+  <string name="game_settings_game_name_sublabel" definition="Sub-label for game title text input explaining how game name is used.">
+    Players use this to join your game
+  </string>
+
+  <string name="game_settings_game_name_hint_text" definition="Hint text for game title text input.">
+    HvZ
+  </string>
+
+  <string name="game_stats_error_label" definition="Error label when showing game stats failed">
+    Error: can\'t show stats, try again.
+  </string>
+
+  <string name="game_stats_current_population_label" definition="Label for the pie chart showing the current population.">
+    Current Population
+  </string>
+
+  <string name="game_stats_population_over_time_label" definition="Label for the line chart showing the population over time.">
+    Population Over Time
+  </string>
+
+  <string name="generic_success_toast" definition="Toast shown when a user action successfully finished.">
+    Success!
+  </string>
+
+  <string name="infect_card_title" definition="Card title for the infect widget.">
+    Infect a human
+  </string>
+
+  <string name="infect_card_hint_text" definition="Hint text for the infect widget.">
+    Enter player lifecode
+  </string>
+
+  <string name="infect_card_button" definition="Button text for the infect widget.">
+    Infect
+  </string>
+
+  <string name="join_game_game_hint" definition="Hint text for the game name text input.">
+    HvZ
+  </string>
+
+  <string name="join_game_game_label" definition="Label for the game input textview.">
+    Join game
+  </string>
+
+  <string name="join_game_player_hint" definition="Hint text for the player name text input.">
+    Moldavi the Mighty
+  </string>
+
+  <string name="join_game_player_label" definition="Label for the player name input textview.">
+    Player name
+  </string>
+
+  <string name="join_game_error_label_game" definition="Hint text for the error if a game doesn't exist or if the user is already a player.">
+    Can\'t join this game
+  </string>
+
+  <string name="join_game_error_label_player" definition="Hint text for the error if a player name is already taken.">
+    Name is already taken
+  </string>
+
+  <string name="join_game_success_message" definition="Toast for successful game join.">
+    You joined the game!
+  </string>
+
+  <string name="leaderboard_card_title" definition="Card title for the leaderboard widget.">
+    %1$s leaderboard
+  </string>
+
+  <string name="life_code_card_title" definition="Card title for the life code widget.">
+    Life Code
+  </string>
+
+  <string name="life_code_card_description" definition="Card description for the life code widget.">
+    For past life codes see your profile page.
+  </string>
+
+  <string name="markdown_hint_dialog_title" definition="Dialog title for showing markdown hints.">
+    Markdown hints
+  </string>
+
+  <string name="markdown_hint_arrow" definition="Arrow demonstrating left is relevant to right.">
+    →
+  </string>
+
+  <string name="markdown_hint_bold" definition="Text for bold markdown text.">
+    **bold**
+  </string>
+
+  <string name="markdown_hint_italic" definition="Text for italic markdown text.">
+    __italic__
+  </string>
+
+  <string name="markdown_hint_strike" definition="Text for strike-through markdown text.">
+    ~~strike~~
+  </string>
+
+  <string name="markdown_hint_heading1" definition="Text for heading1 markdown text.">
+    # H1
+  </string>
+
+  <string name="markdown_hint_heading2" definition="Text for heading2 markdown text.">
+    ## H2
+  </string>
+
+  <string name="markdown_hint_heading3" definition="Text for heading3 markdown text.">
+    ### H3
+  </string>
+
+  <string name="markdown_hint_heading4" definition="Text for heading4 markdown text.">
+    #### H4
+  </string>
+
+  <string name="markdown_hint_heading5" definition="Text for heading5 markdown text.">
+    ##### H5
+  </string>
+
+  <string name="markdown_hint_heading6" definition="Text for heading6 markdown text.">
+    ###### H6
+  </string>
+
+  <string name="menu_bottom_nav_chat" definition="Bottom navigation menu item for opening chat.">
+    Chat
+  </string>
+
+  <string name="menu_bottom_nav_home" definition="Bottom navigation menu item for opening home screen.">
+    Home
+  </string>
+
+  <string name="menu_bottom_nav_missions" definition="Bottom navigation menu item for opening list of missions.">
+    Missions
+  </string>
+
+  <string name="menu_bottom_nav_settings" definition="Bottom navigation menu item for opening settings.">
+    Settings
+  </string>
+
+  <string name="menu_bottom_nav_profile" definition="Bottom navigation menu item for opening profile page.">
+    Profile
+  </string>
+
+  <string name="mission_title" definition="Title of the action bar for the missions screen.">
+    Missions
+  </string>
+
+  <string name="mission_settings_title" definition="Action bar title for the mission settings screen.">
+    Mission settings
+  </string>
+
+  <string name="mission_time_separator" definition="Separator between mission start and end times.">
+    to
+  </string>
+
+  <string name="mission_settings_create_mission_title" definition="Action bar title for creating a mission screen.">
+    Create mission
+  </string>
+
+  <string name="mission_settings_name_hint_text" definition="Hint text for mission title text input.">
+    Mission 1 - Protect the Scientist
+  </string>
+
+  <string name="mission_settings_time" definition="Label for mission duration.">
+    Time
+  </string>
+
+  <string name="mission_settings_delete" definition="Menu option to delete the mission.">
+    Permanently delete mission
+  </string>
+
+  <string name="mission_settings_time_hint_text" definition="Hint text for setting mission start/end time.">
+    &lt;set&gt;
+  </string>
+
+  <string name="mission_settings_details_label" definition="Label for mission details.">
+    Details
+  </string>
+
+  <string name="mission_settings_allegiance_label" definition="Label for mission allegiance filter.">
+    Allegiance
+  </string>
+
+  <string name="navigation_drawer_game_dashboard" definition="Navigation drawer menu item for opening the dashboard of a game.">
+    Dashboard
+  </string>
+
+  <string name="navigation_drawer_game_list" definition="Navigation drawer menu item for opening the list of games.">
+    Change game
+  </string>
+
+  <string name="navigation_drawer_create_game" definition="Navigation drawer menu item for creating a game.">
+    Create new game
+  </string>
+
+  <string name="navigation_drawer_edit_quiz" definition="Navigation drawer menu item for opening the admin view for the declaration quiz.">
+    Edit allegiance quiz
+  </string>
+
+  <string name="navigation_drawer_faq" definition="Navigation drawer menu item for opening the FAQ of a game.">
+    FAQ
+  </string>
+
+  <string name="navigation_drawer_game_settings" definition="Navigation drawer menu item for opening settings for the current game.">
+    Game settings
+  </string>
+
+  <string name="navigation_drawer_game_stats" definition="Game stats nav drawer label.">
+    Game stats
+  </string>
+
+  <string name="navigation_drawer_admin_chat_list" definition="Navigation drawer menu item for opening list of chats admin is in for the current game.">
+    View admin chats
+  </string>
+
+  <string name="navigation_drawer_create_chat_with_admin" definition="Navigation drawer menu item for creating a chat with admins.">
+    Chat with an Admin
+  </string>
+
+  <string name="navigation_drawer_home" definition="Navigation drawer menu item for opening the home screen.">
+    Home
+  </string>
+
+  <string name="navigation_drawer_infect_player" definition="Navigation drawer menu item for infecting a player.">
+    Infect player
+  </string>
+
+  <string name="navigation_drawer_leaderboard" definition="Navigation drawer menu item for showing the Leaderboard.">
+    Leaderboard
+  </string>
+
+  <string name="navigation_drawer_rewards" definition="Navigation drawer menu item for opening the reward dashboard for the game.">
+    Rewards
+  </string>
+
+  <string name="navigation_drawer_redeem_reward" definition="Navigation drawer menu item for redeeming a reward code.">
+    Redeem reward
+  </string>
+
+  <string name="navigation_drawer_rules" definition="Navigation drawer menu item for opening the rules of a game.">
+    Rules
+  </string>
+
+  <string name="navigation_drawer_player_search" definition="Navigation drawer menu item for searching for a player.">
+    Search for player
+  </string>
+
+  <string name="photo_upload_dialog_title" definition="Title for the photo upload dialog.">
+    Image Preview
+  </string>
+
+  <string name="player_profile_admin_options_label" definition="Label for the admin options screen.">
+    Admin Options
+  </string>
+
+  <string name="player_profile_admin_options_allegiance" definition="Button for changing player allegiance.">
+    Change allegiance
+  </string>
+
+  <string name="player_profile_admin_options_reward" definition="Button for gifting the player a reward.">
+    Give reward
+  </string>
+
+  <string name="player_profile_allegiance_label" definition="Label for the player's allegiance.">
+    Allegiance
+  </string>
+
+  <string name="player_profile_life_code_label" definition="Label for the player's latest life code.">
+    Current life code
+  </string>
+
+  <string name="player_profile_life_code_unused_label" definition="Label for the player's life code if it is still active.">
+    Previous life code - still active
+  </string>
+
+  <string name="player_profile_life_code_used_label" definition="Label for the player's life code if it's used.">
+    Previous life code - claimed
+  </string>
+
+  <string name="player_search_input_label" definition="Label for the input textview for filtering players.">
+    Search for player:
+  </string>
+
+  <string name="player_search_error_label" definition="Error label shown when an operation fails in the player search dialog.">
+    Failed, try again
+  </string>
+
+  <string name="change_conflict_error_label" definition="Error stating that data was updated.">
+    Oh no! Someone else made a change… copy your changes, quit editing and try again.
+  </string>
+
+  <string name="quiz_answer_dialog_title" definition="Title for the quiz answer dialog.">
+    Quiz Answer
+  </string>
+
+  <string name="quiz_answer_dialog_text" definition="Label for the text input for an answer's text.">
+    Answer
+  </string>
+
+  <string name="quiz_answer_dialog_correctness" definition="Label for the text input for an answer's text.">
+    This answer option is
+  </string>
+
+  <string name="quiz_answer_empty_text" definition="Label for the answer text when it is empty.">
+    &lt;click to edit answer&gt;
+  </string>
+
+  <string name="quiz_answer_order_text" definition="Label for the answer's ordering.">
+    #%1$s
+  </string>
+
+  <string name="quiz_answer_correct_text" definition="Label for the answer's correctness.">
+    This is a **CORRECT** answer option
+  </string>
+
+  <string name="quiz_answer_incorrect_text" definition="Label for the answer's correctness.">
+    This is an **INCORRECT** answer option
+  </string>
+
+  <string name="quiz_dashboard_title" definition="Title for the declaration quiz dashboard.">
+    Quiz Questions
+  </string>
+
+  <string name="quiz_dashboard_answer_count" definition="Count for the number of answers a question has.">
+    %1$d answers
+  </string>
+
+  <string name="quiz_dashboard_dialog_title" definition="Title for the declaration quiz dialog to select question type.">
+    Create new question of type:
+  </string>
+
+  <string name="quiz_dashboard_dialog_type_true_false" definition="Option for creating a true/false question type.">
+    True/False
+  </string>
+
+  <string name="quiz_dashboard_dialog_type_order" definition="Option for creating an order question type.">
+    Order items
+  </string>
+
+  <string name="quiz_dashboard_dialog_type_multiple_choice" definition="Option for creating a multiple choice question type.">
+    Multiple Choice
+  </string>
+
+  <string name="quiz_dashboard_dialog_type_info" definition="Option for creating an info screen 'question' type.">
+    Info only
+  </string>
+
+  <string name="quiz_card_title" definition="Title for the question showing the number.">
+    #%1$s
+  </string>
+
+  <string name="quiz_info_question_title" definition="Title for the info question type.">
+    Info
+  </string>
+
+  <string name="quiz_order_question_title" definition="Title for the order question type.">
+    Order the answers
+  </string>
+
+  <string name="quiz_true_false_question_title" definition="Title for the true false question type.">
+    True/False
+  </string>
+
+  <string name="quiz_multiple_choice_question_title" definition="Title for the multiple question type.">
+    Multiple choice
+  </string>
+
+  <string name="quiz_question_multi_answer_description" definition="Description telling the admin more info about answers.">
+    Answers will appear in a random order to users.
+  </string>
+
+  <plurals name="reward_card_label_points" definition="Label for the text input for specifying a reward's points.">
+    <item quantity="one">%1$s pt</item>
+    <item quantity="other">%1$s pts</item>
+  </plurals>
+
+  <string name="redeem_code_error_label" definition="Error label when redeeming a code failed">
+    Error: code failed
+  </string>
+
+  <string name="reward_card_label_generate_claim_codes_button" definition="Label for the button to generate new claim codes.">
+    Generate claim codes
+  </string>
+
+  <string name="reward_card_label_view_claim_codes_button" definition="Label for the button to view claim codes.">
+    View claim codes
+  </string>
+
+  <string name="reward_claim_code_dialog" definition="Dialog title for the dialog to select an amount of claim codes to generate.">
+    Amount to generate
+  </string>
+
+  <string name="reward_card_view_claim_code_button" definition="Button text for showing a list of claim codes.">
+    View claim codes
+  </string>
+
+  <string name="reward_card_label_claim_code_count" definition="Label for showing the available claim codes.">
+   Available: %1$s/%2$s
+  </string>
+
+  <string name="reward_claim_code_dialog_button" definition="Confirmation button for the claim code generator dialog.">
+    Generate
+  </string>
+
+  <string name="reward_settings_create_reward_title" definition="Title for the reward creation view.">
+    Create reward
+  </string>
+
+  <string name="reward_settings_error_label" definition="Error label when short name is already used.">
+    Error: name is already used
+  </string>
+
+  <string name="reward_claim_code_hint" definition="Hint text for inputing a reward claim code">
+    Enter reward code
+  </string>
+
+  <string name="reward_claim_code_dialog_title" definition="Title for the available claim codes">
+    Unused claim codes:
+  </string>
+
+  <string name="reward_claim_code_dialog_none" definition="Indicator that there are no claim codes">
+    &lt; none &gt;
+  </string>
+
+  <string name="reward_settings_edit_reward_title">
+    Edit reward
+  </string>
+
+  <string name="reward_settings_short_name_hint_text" definition="Hint text for an abbreviated reward for bravery.">
+    valor
+  </string>
+
+  <string name="reward_settings_long_name_hint_text" definition="Hint text for long reward name of bravery.">
+    Extreme Valor In Battle
+  </string>
+
+  <string name="reward_settings_label_points" definition="Label for the text input for specifying a reward's points.">
+    Point value
+  </string>
+
+  <string name="reward_settings_label_short_name" definition="Label for the text input for specifying a reward's short name.">
+    Short name
+  </string>
+
+  <string name="reward_settings_label_long_name" definition="Label for the text input for specifying a reward's long name.">
+    Long name
+  </string>
+
+  <string name="reward_settings_label_description" definition="Label for the text input for specifying a reward's description.">
+    Description
+  </string>
+
+  <string name="reward_settings_label_delete_button" definition="Label for the button to delete the reward.">
+    Permanently delete reward
+  </string>
+
+  <string name="set_allegiance_title" definition="Title for dialog to change the player's allegiance.">
+    Change allegiance to:
+  </string>
+
+  <string name="set_allegiance_positive_button" definition="Button for selecting the player's allegiance.">
+    Update
+  </string>
+
+  <string name="settings_filter" definition="Menu option to filter a list.">
+    Filter the list
+  </string>
+
+  <string name="set_allegiance_warning" definition="Warning text about changing a player's allegiance.">
+    Be careful, changing this will cause the player to be added and removed from the appropriate groups based on their new allegiance.
+    Note that if a player is already human and you set them to human again THEY WILL GET A ADDITIONAL LIFECODE. That means a zombie
+    can still redeem their old lifecode and get points but this player will stay human. Players are human until ALL of their lifecodes are claimed.
+    Setting a zombie to be a zombie does nothing. Weird things could happen if you set a player to be undeclared; maybe it will be fine and maybe it will break?
+  </string>
+
+  <string name="sign_in_failed_toast">
+    Sign in failed :(
+  </string>
+
+  <string name="sign_in_header" definition="Header on the sign in screen inviting players to the game.">
+    Join the battle!
+  </string>
+
+  <string name="sign_out_button" definition="Sign out button.">
+    Sign out
+  </string>
+
+  <string name="take_quiz_check_button" definition="Button to verify answers.">
+    Check answers
+  </string>
+
+  <string name="take_quiz_rules_button" definition="Button to show rules.">
+    Help
+  </string>
+
+  <string name="take_quiz_title" definition="App bar title for the take quiz screen.">
+    Quick quiz
+  </string>
+
+  <string name="take_quiz_answer_error" definition="Error notice when answers aren't correct.">
+    Error, not all answers are correct. Edit your answers and try again.
+  </string>
+
+  <string name="take_quiz_answer_success" definition="Success notice when answers are correct.">
+    Nice! All correct, you can move on to the next question now
+  </string>
+
+
+  <!-- Accessibility strings -->
+  <string name="button_collapse_content_description" definition="Content description for button to collapse details.">
+    Collapse options
+  </string>
+
+  <string name="button_expand_content_description" definition="Content description for button to expand details.">
+    Expand options
+  </string>
+
+  <string name="chat_info_content_description" definition="Content description for the icon to open chat info page.">
+    See chat info
+  </string>
+
+  <string name="force_upgrade_image_content_description" definition="Content description for force upgrade image.">
+    poo
+  </string>
+
+  <string name="markdown_dialog_trigger_content_description" definition="Content description for the button that opens the markdown cheatsheet.">
+    View Markdown hints
+  </string>
+
+  <string name="delete_button_content_description" definition="Content description for a delete button.">
+    Delete
+  </string>
+
+  <string name="overflow_button_content_description" definition="Content description for an overflow button.">
+    Options
+  </string>
+
+  <string name="reward_card_expand_content_description" definition="Content description for button to expand reward details.">
+    Expand reward details
+  </string>
+
+  <string name="reward_card_collapse_content_description" definition="Content description for button to collapse reward details.">
+    Collapse reward details
+  </string>
+
+
+  <!-- Non-translatable strings -->
+  <string name="settings_start_time_tag" definition="Tag for the start time view." translatable="false">
+    starttime
+  </string>
+
+  <string name="settings_end_time_tag" definition="Tag for the end time view." translatable="false">
+    endtime
+  </string>
+</resources>

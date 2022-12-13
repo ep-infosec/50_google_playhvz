@@ -1,0 +1,127 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<dom-module id="ghvz-real-app">
+<script>
+  // Not sure why this HTMLImports.whenReady is really needed.
+  // Something about polymer initialization order.
+  // I think we're not supposed to need this.
+  HTMLImports.whenReady(() => {
+    Polymer({
+      is: 'ghvz-real-app',
+
+      properties: {
+        config: Object,
+        
+        bridge: {
+          type: Object,
+          value: undefined,
+        },
+
+        // Exists to supply a null to app
+        userId: {
+          type: String,
+          value: null,
+        },
+
+        url: String,
+
+        config: {
+          type: Object,
+          value: undefined,
+        },
+      },
+
+      listeners: {
+        'ghvz-replace-url': 'replaceUrl_',
+        'ghvz-push-url': 'pushUrl_',
+      },
+
+      observers: [
+        'onConfigReceived_(config)',
+      ],
+
+      pushUrl_(e) {
+        this.setUrl_(false);
+      },
+
+      replaceUrl_(e) {
+        this.setUrl_(true);
+      },
+
+      setUrl_(replace) {
+        let queryParams = Utils.getUrlQueryParameters();
+
+        // Assemble new URL
+        let newUrl = '/' + this.$.app.path.join('/');
+        let queryString = '';
+        for (let key in queryParams) {
+          queryString += (queryString ? '&' : '?');
+          queryString += key + '=' + queryParams[key];
+        }
+        newUrl += queryString;
+
+        if (replace)
+          window.history.replaceState({}, "", newUrl);
+        else
+          window.history.pushState({}, "", newUrl);
+      },
+
+      attached() {
+        window.onpopstate = this.handlePopState_.bind(this);
+      },
+
+      handlePopState_(e) {
+        this.$.app.path = this.makePathFromUrl_();
+      },
+
+      makePathFromUrl_() {
+        let pathString = window.location.pathname;
+        // Strip any slash at beginning or end
+        pathString = pathString.startsWith('/') ? pathString.slice(1) : pathString;
+        pathString = pathString.endsWith('/') ? pathString.slice(0, pathString.length - 1) : pathString;
+        return pathString ? pathString.split('/') : [];
+      },
+
+      onConfigReceived_() {
+        this.bridge =
+            new Bridge(
+                new IdGenerator(),
+                new RemoteBridge(this.config.backendUrl, this.config.firebaseConfig, (e) => this.fire('ghvz-alert', {message: e})));
+        this.bridge.getSignedInPromise().then(() => {
+          this.setAttribute('signed-in', true);
+        });
+      },
+    });
+  });
+</script>
+<style>
+  :host {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+</style>
+<template>
+  <ghvz-app
+      id="app"
+      config="[[config]]"
+      bridge="[[bridge]]"
+      user-id="[[userId]]"
+      url="[[url]]"
+      path="[[makePathFromUrl_()]]">
+  </ghvz-app>
+</template>
+</dom-module>

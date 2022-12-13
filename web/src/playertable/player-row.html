@@ -1,0 +1,113 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<dom-module id="ghvz-player-row">
+  <script>
+    // Not sure why this HTMLImports.whenReady is really needed.
+    // Something about polymer initialization order.
+    // I think we're not supposed to need this.
+    HTMLImports.whenReady(() => {
+      Polymer({
+        is: 'ghvz-player-row',
+
+        properties: {
+          game: Object,
+          player: {
+            type: Object,
+            observer: 'onPlayerChanged_',
+          },
+          rewardCategoriesById: Object,
+        },
+
+        onPlayerChanged_: function(player) {
+          player.selected = !!player.selected;
+        },
+
+        computeAllegiance_: function() {
+          return PlayerUtils.computeAllegiance(this.player);
+        },
+
+        computePlayerProfileLink_(game, playerId) {
+          return '/' + game.id + '/profile/' + playerId;
+        },
+
+        handleProfileLink_(e) {
+          if (!e.detail.sourceEvent.metaKey &&
+              !e.detail.sourceEvent.shiftKey &&
+              !e.detail.sourceEvent.altKey) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.fire('ghvz-set-path', {
+              inGame: true,
+              path: ['profile', this.player.id],
+              replace: false,
+            });
+          }
+        },
+        computeGotEquipmentString_(gotEquipment) {
+          return gotEquipment ? "Yes" : "No";
+        },
+        computeExtra_(notes, beInPhotos, wantToBeSecretZombie, isActive) {
+          // Keep this code in sync with player-table.html
+          // TODO: Find a place to combine these
+          let sections = [];
+          if (notes)
+            sections.push('"' + notes + '"');
+          if (!beInPhotos)
+            sections.push('!Photos');
+          if (wantToBeSecretZombie)
+            sections.push('WP');
+          if (!isActive)
+            sections.push('!Active');
+          return sections.join(' ');
+        },
+      });
+    });
+  </script>
+  <style>
+    :host {
+      display: table-row;
+    }
+    :host > div, :host > a {
+      display: table-cell;
+      padding: 4px 8px;
+    }
+    a {
+      color: #4080FF;
+    }
+    #name[inactive] {
+      text-decoration: line-through;
+    }
+  </style>
+  <template>
+    <ghvz-table-control-cell id="control" item="[[player]]"></ghvz-table-control-cell>
+    <div id="number">
+      [[player.number]]
+    </div>
+    <a id="name" href="[[computePlayerProfileLink_(game, player.id)]]" on-tap="handleProfileLink_" inactive$="[[!player.isActive]]">
+      [[player.name]]
+    </a>
+    <div id="allegiance">
+      [[computeAllegiance_(player.allegiance)]]
+    </div>
+    <div id="gotEquipment">
+      [[computeGotEquipmentString_(player.private.gotEquipment)]]
+    </div>
+    <div id="extra">
+      [[computeExtra_(player.private.notes, player.private.beInPhotos, player.private.wantToBeSecretZombie, player.isActive)]]
+    </div>
+  </template>
+</dom-module>

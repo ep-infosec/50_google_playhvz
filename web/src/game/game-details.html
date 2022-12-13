@@ -1,0 +1,174 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<dom-module id="ghvz-game-details">
+<script>
+  // Not sure why this HTMLImports.whenReady is really needed.
+  // Something about polymer initialization order.
+  // I think we're not supposed to need this.
+  HTMLImports.whenReady(() => {
+    Polymer({
+      is: 'ghvz-game-details',
+
+      properties: {
+        bridge: Object,
+        userId: String,
+        game: {
+          type: Object,
+          value: null,
+        }
+      },
+
+      attached() {
+        this.fire('ghvz-add-toolbar-button', { button: this.$.update });
+      },
+
+      makeFormBlueprint_: function() {
+        return {
+          fields: [
+            {
+              property: "id",
+              name: "game-id",
+              label: "Id",
+              description: "Will appear in the url, keep it short.",
+              width: "half",
+            },
+            {
+              property: "name",
+              name: "game-name",
+              label: "Name",
+              width: "half",
+              description: "Full name for the game.",
+            },
+            {
+              property: "stunTimer",
+              name: "game-stunTimer",
+              label: "Stun timer (in seconds)",
+              description: "Stun timer, in seconds.",
+              type: 'number',
+              width: "half",
+            },
+            {
+              property: "infectPoints",
+              name: "game-infectPoints",
+              label: "Infection Points",
+              description: "Points a zombie gets per infection.",
+              type: 'number',
+              width: "half",
+            },
+            {
+              name:"reg-end-time",
+              property: "registrationEndTime",
+              label: "End Time",
+              type: 'timestamp',
+              width: "half",
+              description: "Registration cut-off time.",
+            },
+            {
+              name:"start-time",
+              property: "startTime",
+              label: "Start Time",
+              type: 'timestamp',
+              width: "half",
+              description: "Time the game starts.",
+            },
+            {
+              name:"end-time",
+              property: "endTime",
+              label: "End Time",
+              type: 'timestamp',
+              width: "half",
+              description: "Time the game ends.",
+            },
+            {
+              name:"declare-resistance-end-time",
+              property: "declareResistanceEndTime",
+              label: "Declare Resistance End Time",
+              type: 'timestamp',
+              width: "half",
+              description: "Cut-off time for declaring as a human.",
+            },
+            {
+              name:"declare-horde-end-time",
+              property: "declareHordeEndTime",
+              label: "Declare Horde End Time",
+              type: 'timestamp',
+              width: "half",
+              description: "Cut-off time for declaring as a zombie.",
+            },
+          ],
+        };
+      },
+
+      editGame_: function() {
+        this.$.gameForm.openForEditing(this.game)
+            .then((properties) => {
+              properties.gameId = this.game.id;
+              delete properties.id;
+              this.bridge.updateGame(properties);
+            });
+      },
+
+      formatTime_: function(time) {
+        return Utils.formatTime(time);
+      },
+    });
+  });
+</script>
+<style>
+  :host {
+    display: flex;
+  }
+  paper-button {
+    margin: 0 0 8px 0;
+  }
+  #modify {
+    display: block;
+    float: right;
+  }
+</style>
+<template>
+  <paper-icon-button name="game-icon" hidden$="[[!isAdmin]]" id="update" icon="icons:create" on-tap="editGame_">
+  </paper-icon-button>
+  <ghvz-super-form
+      id="gameForm"
+      type-name="Game"
+      is-mobile="[[isMobile]]"
+      blueprint="[[makeFormBlueprint_()]]">
+  </ghvz-super-form>
+
+  <div hidden$="[[!game]]">
+    <div name="game-id" id="number">ID: <b>[[game.id]]</b></div>
+    <div name="game-name" id="name">Name: <b>[[game.name]]</b></div>
+    <div name="game-stunTimer" id="stunTimer">Stun Timer: <b>[[game.stunTimer]]</b></div>
+    <div name="game-infectPoints" id="infectPoints">Infect Points: <b>[[game.infectPoints]]</b></div>
+    <div name="game-registrationEndTime" id="registrationEndTime">
+      Registration End Time: <b>[[formatTime_(game.registrationEndTime)]]</b>
+    </div>
+    <div name="game-declareResistanceEndTime" id="declareResistanceEndTime">
+      Declaring Resistance End Time: <b>[[formatTime_(game.declareResistanceEndTime)]]</b>
+    </div>
+    <div name="game-declareHordeEndTime" id="declareHordeEndTime">
+      Declaring Horde End Time: <b>[[formatTime_(game.declareHordeEndTime)]]</b>
+    </div>
+    <div name="game-startTime" id="startTime">
+      Game Start Time: <b>[[formatTime_(game.startTime)]]</b>
+    </div>
+    <div name="game-endTime" id="endTime">
+      Game End Time: <b>[[formatTime_(game.endTime)]]</b>
+    </div>
+  </div>
+</template>
+</dom-module>

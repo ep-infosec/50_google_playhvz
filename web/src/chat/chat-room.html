@@ -1,0 +1,703 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<dom-module id="ghvz-chat-room">
+  <script>
+    // Not sure why this HTMLImports.whenReady is really needed.
+    // Something about polymer initialization order.
+    // I think we're not supposed to need this.
+    HTMLImports.whenReady(() => {
+      Polymer({
+        is: 'ghvz-chat-room',
+
+        properties: {
+          bridge: Object,
+          game: Object,
+          currentPlayer: Object,
+          chatRoomId: String,
+          isAdmin: Boolean,
+
+          isAttached: {
+            type: Boolean,
+            value: null,
+          },
+
+          isMobile: {
+            type: Boolean,
+            value: false,
+          },
+
+          chatRoom: Object,
+
+          selectedPlayers: {
+            type: Object,
+            value: null,
+          },
+
+          chatInfoVisible: {
+            type: Boolean,
+            value: false,
+          },
+
+          pendingLastSeenTime: Number,
+
+          isMemberOfChatRoom: Boolean,
+        },
+
+        listeners: {
+          'ghvz-hide-chat-drawer': 'hideChatInfo',
+          'ghvz-chat-info-action': 'executeAction_',
+          'tap': 'maybeUpdateLastSeenTime_',
+        },
+
+        observers: [
+          'onChatRoomIdChange_(chatRoomId, game.chatRooms, game.chatRoomsById)',
+          'onChatRoomMembershipChange_(chatRoomId, currentPlayer.private.chatRoomMembershipsById.*)',
+          'onChatRoomNameChange_(chatRoom.name, isAttached)',
+          'onMessageReceived_(chatRoom.messages.*)',
+        ],
+
+        attached: function () {
+          this.isAttached = true;
+          this.fire('ghvz-add-toolbar-button', { button: this.$.info });
+          this.trackScrolling_();
+        },
+
+        onChatRoomIdChange_(chatRoomId) {
+          assert(this.game.chatRoomsById[chatRoomId]);
+          this.$.chatRoomSelector.select(this.game.chatRoomsById[chatRoomId]);
+          this.hideChatInfo();
+          this.pendingLastSeenTime = null;
+        },
+
+        onChatRoomNameChange_: function () {
+          this.async(() => {
+            this.fire('ghvz-set-card-header-text', { headerText: this.chatRoom.name });
+          });
+        },
+
+        onChatRoomMembershipChange_: function () {
+          let membership = this.currentPlayer.private.chatRoomMembershipsById[this.chatRoomId];
+          this.isMemberOfChatRoom = membership ? true : false;
+        },
+
+        onMessageReceived_() {
+          let scrollTop = this.$.conversationContainer.scrollTop;
+          let offsetHeight = this.$.conversationContainer.offsetHeight;
+          let scrollHeight = this.$.conversationContainer.scrollHeight;
+          let currentPosition = scrollTop + offsetHeight;
+          let scrollBuffer = 60;
+          if (currentPosition >= scrollHeight - scrollBuffer) {
+            this.async(() => {
+              // Call render() so that the newly received message is displayed 
+              // before scrollHeight is calculated so we scroll to the bottom 
+              // of the new message.
+              this.$.renderedMessages.render();
+              this.$.conversationContainer.scrollTop =
+                this.$.conversationContainer.scrollHeight;
+
+              this.maybeUpdateLastSeenTime_();
+            });
+          }
+        },
+
+        trackScrolling_() {
+          this.$.conversationContainer.addEventListener('scroll', function (e) {
+            let ticking;
+            lastKnownScrollPosition = this.$.conversationContainer.scrollTop;
+            if (!ticking) {
+              window.requestAnimationFrame(() => {
+                this.maybeUpdateLastSeenTime_();
+                ticking = false;
+              });
+            }
+            ticking = true;
+          }.bind(this));
+        },
+
+        maybeUpdateLastSeenTime_() {
+          if (this.chatRoom.messages.length <= 0) {
+            // No messages to check
+            return;
+          }
+          let lastMessage = this.chatRoom.messages[this.chatRoom.messages.length - 1];
+          let chatRoomMembership = this.currentPlayer.private.chatRoomMembershipsById[this.chatRoomId];
+          if (!chatRoomMembership) {
+            // This might happen if we're an admin looking at a chat we aren't in
+            return;
+          }
+          if (lastMessage.time <= chatRoomMembership.lastSeenTime) {
+            // We've already seen the newest message and don't need to check visibility
+            return;
+          }
+          let lastMessageElement = this.$$('#' + lastMessage.id);
+          let messageVisible = this.isElementInView(lastMessageElement, this.$.conversationContainer);
+          if (messageVisible) {
+            if (!this.pendingLastSeenTime || this.pendingLastSeenTime < lastMessage.time) {
+              this.pendingLastSeenTime = lastMessage.time;
+              this.bridge.updateChatRoomMembership({
+                gameId: this.game.id,
+                chatRoomId: this.chatRoom.id,
+                actingPlayerId: this.currentPlayer.id,
+                lastSeenTime: lastMessage.time,
+              });
+            }
+          }
+        },
+
+        /* Returns true if any part of the message is visible in the container. */
+        isElementInView(element, container) {
+          let containerScrollTop = container.scrollTop; // number of pixels scrolled vertically
+          let containerVisibleBottom = containerScrollTop + container.offsetHeight; // + height of visible box
+          let elementOffsetTop = element.offsetTop; // distance from the top of the container
+          let elementOffsetBottom = elementOffsetTop + element.offsetHeight; // + height of element
+          let isVisibleInContainer =
+            (elementOffsetTop <= containerVisibleBottom) && (elementOffsetBottom >= containerScrollTop);
+          if (!isVisibleInContainer)
+            return false;
+          // Element is visible in container, see if it's also visible on the screen (like on dashboard)
+          let rect = element.getBoundingClientRect();
+          if (rect.top == 0 && rect.bottom == 0) {
+            // Element is off screen
+            return false;
+          }
+          return (rect.top <= window.innerHeight) && (rect.bottom >= 0);
+
+        },
+
+        computeMessageDisplayClass_(senderId, myId) {
+          return senderId === myId ? 'message-from-me' : 'message-from-other';
+        },
+
+        displaySenderInfo(message) {
+          let messageIndex = this.chatRoom.messages.indexOf(message);
+          if (messageIndex == 0) {
+            return 'display-sender';
+          }
+          let currentMessage = this.chatRoom.messages[messageIndex];
+          let previousMessage = this.chatRoom.messages[messageIndex - 1];
+          if (currentMessage.playerId != previousMessage.playerId) {
+            return 'display-sender';
+          } else {
+            return 'hide-sender';
+          }
+        },
+
+        getName_(playerId) {
+          let player = this.game.playersById[playerId];
+          /* this.$.playerSelector.select(
+                 this.game.players.find(player => player.id == playerId)); */
+          return player && player.name;
+        },
+
+        getProfilePic_(playerId) {
+          let player = this.game.playersById[playerId];
+          return player && player.profileImageUrl;
+        },
+
+        openPlayerProfile_(e) {
+          return;  // should we enable this?
+          var playerId = e.model.item.playerId;
+          if (playerId) {
+            this.fire('ghvz-set-path', {
+              inGame: true,
+              path: ['profile', playerId],
+              replace: false,
+            });
+          }
+        },
+
+        /**
+        * Returns the date in format: Day 00:00
+        */
+        getTime_(time) {
+          var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          var date = new Date(time);
+          return days[date.getDay()] + " " +
+            ("0" + date.getHours()).slice(-2) + ":" +
+            ("0" + date.getMinutes()).slice(-2);
+        },
+
+        toggleChatInfo_: function () {
+          this.chatInfoVisible ? this.hideChatInfo() : this.showChatInfo();
+        },
+
+        showChatInfo() {
+          this.$.info.icon = "info";
+          this.$.drawer.style.pointerEvents = "auto";
+          this.$.drawer.openDrawer();
+          this.chatInfoVisible = true;
+        },
+
+        hideChatInfo() {
+          this.$.info.icon = "info-outline"
+          this.$.drawer.style.pointerEvents = "none";
+          this.$.drawer.closeDrawer();
+          this.chatInfoVisible = false;
+        },
+
+        /* Captures taps when the drawer is open. */
+        captureTap_(e) {
+          if (e.srcElement.id == 'scrim') {
+            this.hideChatInfo();
+          }
+          e.preventDefault();
+          e.stopPropagation();
+        },
+
+        /* 
+        *  Catch action from drawer and pass to action executor.
+        *  This is required because drawer can't open dialogs in full
+        *  screen because it enjoys being difficult.
+        */
+        executeAction_(e) {
+          this.$.actions.executeAction(e);
+        },
+
+        /*
+        ######
+        */
+        isSenderCurrentPlayer_(senderId, currentPlayerId) {
+          return senderId == currentPlayerId;
+        },
+
+        isReceiveUnreadRequest_(request, response, currentPlayerId) {
+          return (request.playerId == currentPlayerId) && (request.response == null);
+        },
+
+        countRespondPlayer_(requests) {
+          return requests.filter(request => request.response != null).length;
+        },
+
+        countTotalRequests_(senderId, requests) {
+          return requests.filter(request => request.playerId != senderId).length;
+        },
+
+        notEveryPlayerRespond_(senderId, requests) {
+          return this.countRespondPlayer_(requests) < this.countTotalRequests_(senderId, requests);
+        },
+
+        getNoRespondPlayer_(senderId, requests) {
+          return requests
+            .filter(request => request.response == null && request.playerId != senderId)
+            .map(request => this.game.playersById[request.playerId].name)
+            .join(", ");
+        },
+
+        isRequestAck_(requestCategoryType) {
+          return requestCategoryType == "ack";
+        },
+
+        isResponseNull_(response) {
+          return response == null;
+        },
+
+        acknowledge: function (e) {
+          this.bridge.addResponse({
+            gameId: this.game.id,
+            requestId: e.model.request.id,
+            text: null,
+          });
+        },
+
+        sendAckText: function (e) {
+          this.bridge.addResponse({
+            gameId: this.game.id,
+            requestId: e.model.request.id,
+            text: e.target.previousElementSibling.value,
+          });
+        },
+
+        deleteAck: function (e) {
+          this.bridge.updateRequestCategory({
+            gameId: this.game.id,
+            requestCategoryId: e.model.requestCategory.id,
+            dismissed: true,
+          });
+        },
+
+        /**
+        * Submit text on 'enter', allow shift+enter to insert a new line in
+        * the text field.
+        */
+        checkForEnterTextRequest_: function (e) {
+          if (e.keyCode === 13 && !e.shiftKey) {
+            e.preventDefault();
+            e.target.parentNode.parentNode.parentNode.parentNode.nextElementSibling.click();
+          }
+        },
+
+        sendImage_() {
+          console.log('not implemented');
+        },
+
+        displayContent_(messageObject) {
+          console.log(message);
+
+        },
+      });
+    });
+  </script>
+  <style>
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    :host[small] {
+      height: 400px;
+    }
+
+    .conversation-container {
+      flex-grow: 1;
+      overflow-y: scroll;
+      padding: 8px;
+      position: relative;
+    }
+
+    .ack-container {
+      flex-grow: 0;
+    }
+
+    .drawer-content {
+      overflow: auto;
+    }
+
+    .drawer-panel {
+      pointer-events: none;
+    }
+
+    .message-from-other {
+      display: flex;
+      justify-content: flex-start;
+      position: relative;
+    }
+
+    paper-button.request {
+      background-color: var(--app_color_primary);
+      color: var(--app_color_text_on_primary_background);
+    }
+
+    .message-from-me {
+      display: flex;
+      justify-content: flex-end;
+      position: relative;
+    }
+
+    .player-name {
+      padding-top: 8px;
+      font-size: 10px;
+      opacity: .6;
+    }
+
+    .message-from-me .player-name {
+      align-self: flex-end;
+    }
+
+    .message-from-other .player-name {
+      align-self: flex-start;
+    }
+
+    .display-avatar {
+      position: absolute;
+      top: 14px;
+    }
+
+    .display-sender {}
+
+    .hide-sender {}
+
+    .message-from-me .display-avatar {
+      order: 3;
+    }
+
+    .message-from-other .display-avatar {
+      order: 1;
+    }
+
+    .display-sender .player-name {
+      visibility: visible;
+    }
+
+    .display-sender .display-avatar {
+      visibility: visible;
+    }
+
+    .hide-sender .player-name {
+      display: none;
+    }
+
+    .hide-sender .display-avatar {
+      display: none;
+    }
+
+    .display-message {
+      align-self: center;
+      order: 2;
+    }
+
+    .message-from-me .display-message {
+      padding-right: 8px;
+      margin-right: 28px;
+    }
+
+    .message-from-other .display-message {
+      padding-left: 8px;
+      margin-left: 28px;
+    }
+
+    .profile-pic {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-size: 100% auto;
+      background-position: center center;
+      border: 2px solid green;
+    }
+
+    .message-bubble {
+      border-radius: 16px;
+      margin-bottom: 4px;
+      overflow-wrap: break-word;
+      padding: 4px;
+      padding-right: 8px;
+      padding-left: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .message-text-container {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .message-from-me .message-text-container {
+      flex-direction: row;
+    }
+
+    .message-from-other .message-text-container {
+      flex-direction: row-reverse;
+    }
+
+    .message-from-me .message-bubble {
+      align-self: flex-end;
+      background-color: rgba(135, 206, 250, .4);
+    }
+
+    .message-from-other .message-bubble {
+      align-self: flex-start;
+      background-color: lightgrey;
+    }
+
+    .request-category {
+      padding: 8px;
+      margin: 8px 8px 0 8px;
+      background-color: var(--app_color_accent);
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+
+    .request-category-with-answer {
+      flex-wrap: wrap;
+    }
+
+    .request-category-text-column {
+      flex-grow: 1;
+      align-items: center;
+    }
+
+    #forWebdriver {
+      height: 1px;
+    }
+
+    .request-input {
+      padding: 8px;
+    }
+
+    .request-message {
+      flex-grow: 1;
+      display: inline-block;
+    }
+
+    .request-input-container {
+      display: flex;
+    }
+
+    .request-input {
+      flex-grow: 1;
+    }
+
+    .request-button {
+      flex-shrink: 0;
+    }
+
+    .warning {
+      background-color: beige;
+      color: darkslategrey;
+      padding: 4px;
+      text-align: center;
+    }
+  </style>
+  <template>
+    <!-- -->
+    <array-selector id="chatRoomSelector" items="[[game.chatRooms]]" selected="{{chatRoom}}"></array-selector>
+    <array-selector id="playerSelector" items="[[game.players]]" multi selected="{{selectedPlayers}}"></array-selector>
+
+    <paper-icon-button id="info" icon="icons:info-outline" on-tap="toggleChatInfo_" name$="chat-info-[[chatRoom.name]]">
+    </paper-icon-button>
+
+    <!-- For webdrivers -->
+    <div id="forWebdriver" name$="ChatRoom: [[chatRoom.name]]"></div>
+
+    <div id="ackContainer" class="ack-container" name$="[[chatRoom.name]]">
+      <template is="dom-repeat" items="[[chatRoom.requestCategories]]" as="requestCategory">
+        <template is="dom-if" if="[[!requestCategory.dismissed]]">
+          <template is="dom-if" if="[[isSenderCurrentPlayer_(requestCategory.playerId, currentPlayer.id)]]">
+            <paper-material class="request-category" name$="request-message-[[requestCategory.text]]">
+              <div class="request-category-text-column">
+                <div class="request-message">
+                  [[requestCategory.text]]
+                  ([[countRespondPlayer_(requestCategory.requests,
+                  requestCategory.requests.*)]]/[[countTotalRequests_(requestCategory.playerId,
+                  requestCategory.requests, requestCategory.requests.*)]])
+                </div>
+                <template is="dom-if"
+                  if="[[notEveryPlayerRespond_(requestCategory.playerId, requestCategory.requests, requestCategory.requests.*, requestCategory.requests.*)]]">
+                  waiting on: <b name="not-responded">[[getNoRespondPlayer_(requestCategory.playerId,
+                    requestCategory.requests, requestCategory.requests.*)]]</b>
+                </template>
+                <template is="dom-if" if="[[!isRequestAck_(requestCategory.type)]]">
+                  <template is="dom-repeat" items="[[requestCategory.requests]]" as="request">
+                    <template is="dom-if" if="[[request.response]]">
+                      <div class="request-container" name$="request-response-[[request.response.text]]">
+                        <ghvz-player-label game="[[game]]" player-id="[[request.playerId]]">
+                        </ghvz-player-label>:&#160;
+                        [[request.response.text]]
+                      </div>
+                    </template>
+                  </template>
+                </template>
+              </div> <!-- .request-category-text-column -->
+              <paper-button raised name="dismiss-button" class="request" on-click="deleteAck">Dismiss</paper-button>
+            </paper-material>
+          </template>
+          <template is="dom-if" if="[[!isSenderCurrentPlayer_(requestCategory.playerId, currentPlayer.id)]]">
+            <template is="dom-repeat" items="[[requestCategory.requests]]" as="request">
+              <template is="dom-if" if="[[isReceiveUnreadRequest_(request, request.response, currentPlayer.id)]]">
+                <template is="dom-if" if="[[isRequestAck_(requestCategory.type)]]">
+                  <paper-material class="request-category request-container"
+                    name$="received-ack-[[requestCategory.text]]">
+                    <div class="request-category-text-column">
+                      <ghvz-player-label game="[[game]]" player-id="[[requestCategory.playerId]]">
+                      </ghvz-player-label>:&#160;
+                      <div class="request-message">
+                        [[requestCategory.text]]
+                      </div>
+                      <span hidden>[[request.time]]</span>
+                    </div> <!-- .request-category-text-column -->
+                    <paper-button raised name="ack-button" class="request request-button" on-click="acknowledge">
+                      Ack
+                    </paper-button>
+                  </paper-material>
+                </template>
+                <template is="dom-if" if="[[!isRequestAck_(requestCategory.type)]]">
+                  <paper-material class="request-category request-category-with-answer"
+                    name$="received-request-ack-[[requestCategory.text]]">
+                    <div class="request-category-text-column">
+                      <p hidden>[[request.time]]</p>
+                      <ghvz-player-label game="[[game]]" player-id="[[requestCategory.playerId]]">
+                      </ghvz-player-label>:&#160;
+                      <div class="request-message">
+                        [[requestCategory.text]]
+                      </div>
+                    </div> <!-- .request-category-text-column -->
+                    <div class="request-category-text-column">
+                      <div class="request-input-container">
+                        <paper-input no-label-float class="request-input" on-keydown="checkForEnterTextRequest_"
+                          type="string" label="Answer">
+                        </paper-input>
+                        <paper-button raised class="request" id="textRequestSend" on-click="sendAckText">
+                          Send
+                        </paper-button>
+                      </div> <!-- .request-input-container -->
+                    </div> <!-- .request-category-text-column -->
+                  </paper-material>
+                </template>
+    </div>
+  </template>
+  </template>
+  </template>
+  </template>
+  </template>
+  </div>
+
+  <div id="conversationContainer" name$="conversationContainer: [[chatRoom.name]]" class="conversation-container">
+    <template id="renderedMessages" is="dom-repeat" items="[[chatRoom.messages]]">
+      <div id$="[[item.id]]" name$="message-[[chatRoom.name]]-[[item.message]]"
+        class$="[[computeMessageDisplayClass_(item.playerId, currentPlayer.id)]] [[displaySenderInfo(item)]]">
+        <div class="display-message">
+          <div class="player-name">
+            [[getName_(item.playerId, game.players.length)]]
+          </div>
+          <div class="message-text-container">
+            <template is="dom-if" if="[[item.message]]">
+              <div class="message-bubble">[[item.message]]</div>
+            </template>
+            <template is="dom-if" if="[[item.location]]">
+              <ghvz-static-map class="message-bubble" latitude="[[item.location.latitude]]"
+                longitude="[[item.location.longitude]]">
+              </ghvz-static-map>
+            </template>
+            <paper-tooltip position="top" animation-delay="0">
+              [[getTime_(item.time)]]
+            </paper-tooltip>
+          </div>
+        </div>
+        <div class="display-avatar">
+          <ghvz-player-avatar small game="[[game]]" player-id="[[item.playerId]]"
+            name$="avatar-[[chatRoom.name]]-[[item.message]]"></ghvz-player-avatar>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <template is="dom-if" if="[[!isMemberOfChatRoom]]">
+    <div class="warning">Become a member of this group to send messages</div>
+  </template>
+  <template is="dom-if" if="[[isMemberOfChatRoom]]">
+    <ghvz-chat-room-input bridge="[[bridge]]" game="[[game]]" current-player="[[currentPlayer]]"
+      chat-room="[[chatRoom]]" is-mobile="[[isMobile]]" is-admin="[[isAdmin]]">
+    </ghvz-chat-room-input>
+  </template>
+
+  <div on-tap="captureTap_">
+    <paper-drawer-panel id="drawer" class="drawer-panel" right-drawer disable-swipe force-narrow>
+      <paper-material drawer class="drawer-content">
+        <ghvz-chat-info-drawer bridge="[[bridge]]" game="[[game]]" is-admin="[[isAdmin]]" chat-room-id="[[chatRoomId]]"
+          current-player="[[currentPlayer]]">
+        </ghvz-chat-info-drawer>
+      </paper-material>
+      <div main></div>
+    </paper-drawer-panel>
+  </div>
+
+  <ghvz-chat-info-actions id="actions" bridge="[[bridge]]" game="[[game]]" player-id="[[currentPlayer.id]]"
+    is-admin="[[isAdmin]]" chat-room="[[chatRoom]]">
+  </ghvz-chat-info-actions>
+  </template>
+</dom-module>

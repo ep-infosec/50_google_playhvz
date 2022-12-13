@@ -1,0 +1,81 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<dom-module id="ghvz-game-summary">
+<script>
+  HTMLImports.whenReady(() => {
+    Polymer({
+      is: 'ghvz-game-summary',
+      properties: {
+        game: {
+          type: Object,
+          value: null,
+        },
+        isAdmin: {
+          type: Boolean,
+          value: false,
+        },
+      },
+      observers: ['summaryChanged_(game.summaryHtml)'],
+      attached() {
+        this.fire('ghvz-add-toolbar-button', { button: this.$.update });
+      },
+      summaryChanged_(summaryHtml) {
+        this.$.summary.innerHTML = summaryHtml;
+        this.scopeSubtree(this.$.summary);
+      },
+      makeFormBlueprint_: function() {
+        return {
+          fields: [
+            {
+              property: "summaryHtml",
+              label: "SUMMARY html",
+              description: "HTML summary of the game",
+              type: 'text',
+            },
+          ],
+        };
+      },
+      updateSummary_: function() {
+        this.$.summaryForm.openForEditing({
+          summaryHtml: this.game.summaryHtml,
+        }).then((properties) => {
+          this.bridge.updateGame({
+            gameId: this.game.id,
+            summaryHtml: properties.summaryHtml
+          });
+        });
+      },
+    });
+  });
+</script>
+<style>
+:host {
+  display: block;
+}
+</style>
+<template>
+<paper-icon-button name="rules-icon" hidden$="[[!isAdmin]]" id="update" icon="icons:create" on-tap="updateSummary_">
+</paper-icon-button>
+<ghvz-super-form
+    id="summaryForm"
+    type-name="summary"
+    is-mobile="[[isMobile]]"
+    blueprint="[[makeFormBlueprint_()]]">
+</ghvz-super-form>
+<div id="summary"></div>
+<div name="game-summary-box"><strong>Stun Timer:</strong> [[game.stunTimer]]</div>
+</template>
+</dom-module>

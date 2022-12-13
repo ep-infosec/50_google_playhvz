@@ -1,0 +1,196 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<dom-module id="ghvz-group-field">
+  <script>
+    // Not sure why this HTMLImports.whenReady is really needed.
+    // Something about polymer initialization order.
+    // I think we're not supposed to need this.
+    HTMLImports.whenReady(() => {
+      Polymer({
+        is: 'ghvz-group-field',
+
+        properties: {
+          game: Object,
+
+          // A group ID or null
+          value: {
+            type: String,
+            value: null,
+            notify: true,
+          },
+
+          group: {
+            type: Object,
+            computed: 'computeGroup_(game, value)',
+          },
+
+          groupName: {
+            type: String,
+          },
+
+          text: {
+            type: String,
+            value: "",
+          },
+
+          showMenu: {
+            type: Boolean,
+            value: false,
+          },
+        },
+
+        observers: [
+          'updateGroupName_(value)',
+          'updateGroupName_(group)',
+          'updateGroupName_(group.name)',
+          'textChanged_(text)',
+        ],
+
+        computeGroup_(game, groupId) {
+          return this.game.groupsById[groupId];
+        },
+
+        updateGroupName_() {
+          this.groupName = this.group ? this.group.name : "(none)";
+        },
+
+        filter_(group) {
+          return group.name.toLowerCase().includes(this.text.toLowerCase());
+        },
+
+        sort_(groupA, groupB) {
+          return groupB.players.length - groupA.players.length;
+        },
+
+        computeGroupText_(group, groupId, groupName) {
+          return group ? group.name : "(none)";
+        },
+
+        onItemClicked_(e) {
+          let group = e.model.group;
+          this.text = group.name;
+          this.value = group.id;
+          this.$.dialog.close();
+        },
+
+        onNullItemClicked_() {
+          this.text = "";
+          this.value = null;
+          this.$.dialog.close();
+        },
+
+        textChanged_() {
+          this.$.repeater.filter = this.filter_.bind(this);
+          this.$.repeater.render();
+        },
+
+        open_() {
+          this.$.repeater.filter = null;
+          this.$.dialog.open();
+        },
+      });
+    });
+  </script>
+  <style>
+    :host {
+      display: block;
+    }
+
+    #name {
+      padding: 8px 0;
+    }
+
+    #name:hover {
+      background-color: #F0F0F0;
+      cursor: pointer;
+    }
+
+    #dialog {
+      display: flex;
+      flex-direction: column;
+      width: 320px;
+    }
+
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .button-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      margin: 8px;
+    }
+
+    paper-button {
+      background-color: var(--admin_color_primary);
+      color: var(--admin_color_text_on_primary_background);
+    }
+
+    #title {
+      margin-top: 0;
+      color: var(--admin_color_text_on_primary_background);
+      background-color: var(--admin_color_primary);
+      font-size: 13pt;
+      padding: 16px;
+      font-weight: bold;
+    }
+
+    #contents {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    #list {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+  </style>
+  <template>
+    <div id="name" on-tap="open_">
+      [[groupName]]
+    </div>
+
+    <paper-dialog id="dialog" with-backdrop>
+      <div id="title">Choose Group</div>
+
+      <paper-input id="input" tabindex="0" value="{{text}}" no-label-float on-keyup="textChanged_">
+      </paper-input>
+
+      <paper-listbox id="list" tabindex="0" visible$="[[showMenu]]">
+        <paper-item tabindex="0" class="group" name="null-group" on-tap="onNullItemClicked_">
+          (none)
+        </paper-item>
+        <template is="dom-repeat" id="repeater" items="[[game.groups]]" sort="sort_" filter="filter_" as="group">
+          <paper-item tabindex="0" class="group" name$="group-name-[[computeGroupText_(group, group.id, group.name)]]"
+            on-tap="onItemClicked_">
+            [[computeGroupText_(group, group.id, group.name)]]
+          </paper-item>
+        </template>
+      </paper-listbox>
+
+      <div class="buttons">
+        <paper-button id="cancel" dialog-dismiss>Cancel</paper-button>
+        <paper-button id="done">Set</paper-button>
+      </div>
+    </paper-dialog>
+
+
+  </template>
+</dom-module>

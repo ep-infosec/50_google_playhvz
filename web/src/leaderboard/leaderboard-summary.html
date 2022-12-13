@@ -1,0 +1,169 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<dom-module id="ghvz-leaderboard-summary">
+<script>
+  // Not sure why this HTMLImports.whenReady is really needed.
+  // Something about polymer initialization order.
+  // I think we're not supposed to need this.
+  HTMLImports.whenReady(() => {
+    Polymer({
+      is: 'ghvz-leaderboard-summary',
+
+      properties: {
+        game: {
+          type: Object,
+        },
+        limit: {
+          type: Number,
+          value: 0,
+        },
+        playerIdsToShow: {
+          type: Array,
+          computed: 'computePlayerIdsToShow_(game.players.*)',
+          observer: 'onPlayerIdsToShowChanged_',
+        },
+      },
+
+      onPlayerIdsToShowChanged_() {
+        this.$.repeater.render();
+      },
+
+      computePlayerIdsToShow_() {
+        let sortedPlayers =
+            this.game.players.slice().sort((a, b) => this.sort_(a, b));
+        if (this.limit)
+          sortedPlayers = sortedPlayers.slice(0, this.limit);
+        return sortedPlayers.map(player => player.id);
+      },
+
+      sort_(playerA, playerB) {
+        return (playerB.points - playerA.points) ||
+            (playerA.id > playerB.id ? 1 : -1);
+      },
+
+      // filter_(player) {
+      //   return this.playerIdsToShow && this.playerIdsToShow.includes(player.id);
+      // },
+
+      showPlayer_(playerId, playerIdsToShow) {
+        return playerIdsToShow.includes(playerId);
+      },
+
+      makeClaimsFilter_(claimsArray) {
+        return function(claim) {
+          // Last three claims the player has
+          return claimsArray.indexOf(claim) >= claimsArray.length - 3;
+        };
+      },
+
+      makeTableBlueprint_: function() {
+        return {
+          itemsRepeater: this.$.repeater,
+          columns: [
+            {
+              property: "name",
+              name: "Name",
+            },
+            {
+              property: "allegiance",
+              name: "Allegiance",
+              // filtering: true,
+              // filterable: true,
+              // filterText: "resistance",
+            },
+            {
+              property: "points",
+              name: "Points",
+              sorting: true,
+              ascending: false,
+            },
+          ],
+          actions: [
+            {
+              action: "view",
+              name: "View",
+              handler: ([player]) => {
+                this.fire('ghvz-set-path', {
+                  inGame: true,
+                  path: ['profile', player.id],
+                  replace: false,
+                });
+              },
+            },
+          ]
+        };
+      },
+    });
+  });
+</script>
+<style>
+  .row {
+    display: table-row;
+  }
+  .cell {
+    display: table-cell;
+    padding: 4px 12px;
+  }
+  ghvz-reward-category {
+    display: inline-block;
+    vertical-align: middle;
+  }
+</style>
+<template>
+  <ghvz-table
+      id="leaderboardTable"
+      blueprint="[[makeTableBlueprint_()]]"
+      items="[[game.players]]">
+    <template
+        is="dom-repeat"
+        id="repeater"
+        items="[[game.players]]"
+        as="player"
+        initial-count="1"
+        target-framerate="5"
+        sort="sort_"
+        observe="points">
+      <div name$=leaderboard-player-row-[[player.name]] class="row" hidden$="[[!showPlayer_(player.id, playerIdsToShow)]]">
+        <ghvz-table-control-cell item="[[player]]"></ghvz-table-control-cell>
+        <div
+            name$="Leaderboard Name Cell [[player.name]]"
+            class="cell">
+          [[player.name]]
+          <template is="dom-repeat" items="[[player.claims]]" as="claim" filter="[[makeClaimsFilter_(player.claims)]]">
+            <ghvz-reward-category
+                name$="reward-cat-[[index]]"
+                bridge="[[bridge]]"
+                game="[[game]]"
+                reward-category-id="[[claim.rewardCategoryId]]" badgeOnly>
+            </ghvz-reward-category>
+          </template>
+        </div>
+        <div
+            name$="Leaderboard Allegiance Cell [[player.name]]"
+            class="cell">
+          [[player.allegiance]]
+        </div>
+        <div
+            name$="Leaderboard Points Cell [[player.name]]"
+            class="cell">
+          [[player.points]]
+        </div>
+      </div>
+    </template>
+  </ghvz-table>
+</template>
+</dom-module>

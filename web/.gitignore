@@ -1,0 +1,6 @@
+config.json
+.firebaserc
+bower_components
+database.rules.json
+node_modules
+firebase-debug.log

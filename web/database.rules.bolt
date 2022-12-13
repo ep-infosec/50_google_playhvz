@@ -1,0 +1,543 @@
+// Uses Firebase Bolt to generate firebase rules JSON.
+// https://github.com/firebase/bolt/blob/master/docs/guide.md
+// To generate the rules json:
+//    firebase-bolt rules.bolt
+// Then, paste it into firebase's rules console.
+
+// #1 patch around https://github.com/firebase/bolt/issues/95
+// #2 patch around https://github.com/firebase/bolt/issues/58
+
+// The following mimics the contents of sample_firebase.json
+
+/******************************************************************************
+ Define IDs - Simple Strings
+******************************************************************************/
+type ChatRoomId extends String { validate() { this.startsWith("chatRoom-") } }
+type GameId extends String { validate() { this.startsWith("game-") } }
+type OptionalGameId extends String { validate() { this == "" || this.startsWith("game-") } }
+type MessageId extends String { validate() { this.startsWith("message-") } }
+type PublicPlayerId extends String { validate() { this.startsWith("publicPlayer-") } }
+type PrivatePlayerId extends String { validate() { this.startsWith("privatePlayer-") } }
+type OptionalPlayerId extends String { validate() { this == "" || this.startsWith("publicPlayer-") } }
+type GroupId extends String { validate() { this.startsWith("group-") } }
+type UserId extends String { validate() { !this.includes("-") } }
+type MissionId extends String { validate() { this.startsWith("mission-") } }
+type RewardCategoryId extends String { validate() { this.startsWith("rewardCategory-") } }
+type GunId extends String { validate() { this.startsWith("gun-") } }
+type RewardId extends String { validate() { this.startsWith("reward-") } }
+type PrivateLifeId extends String { validate() { this.startsWith("privateLife-") } }
+type PublicLifeId extends String { validate() { this.startsWith("publicLife-") } }
+type MapId extends String { validate() { this.startsWith("map-") } }
+type MarkerId extends String { validate() { this.startsWith("marker-") } }
+type QueuedNotificationId extends String { validate() { this.startsWith("queuedNotification-") } }
+type NotificationId extends String { validate() { this.startsWith("notification-") } }
+
+
+/******************************************************************************
+ Simple Types That Need Validation
+******************************************************************************/
+type Allegiance extends String {
+  validate() {
+    this == 'resistance' || this == 'horde'
+  }
+}
+
+type OptionalAllegiance extends String {
+  validate() {
+    this == 'none' || this == 'resistance' || this == 'horde'
+  }
+}
+
+type Timestamp extends Number {
+  validate() {
+    this > 1490000000000 // March 2017, milliseconds
+  }
+}
+
+type OptionalTimestamp extends Number | Null {
+  validate() {
+    this == null || this > 1490000000000 // March 2017, milliseconds
+  }
+}
+
+type HtmlUrl extends String {
+  validate() {
+    this.includes("/") && this.includes(".")
+  }
+}
+
+/******************************************************************************
+ Simple Types
+******************************************************************************/
+type ImageUrl {
+  url: HtmlUrl;
+}
+
+type Location {
+  latitude: Number;
+  longitude: Number;
+}
+
+type PublicEntity {
+  read() {
+    true // isAuthenticated()
+  }
+  write() { !writeLocked() && isServer() }
+  validate() { true; }
+}
+
+/******************************************************************************
+ Helper Functions Needed By Complex Types
+******************************************************************************/
+
+getUserId() {
+  ('user-' + auth.uid)
+}
+
+getCurrentUser() {
+  root.users[getUserId()]
+}
+
+getCurrentPublicPlayerId(gameId) {
+  getCurrentUser().games[gameId].playerId
+}
+
+getCurrentPrivatePlayerId(gameId) {
+  root.publicPlayers[getCurrentPublicPlayerId(gameId)].privatePlayerId
+}
+
+isPrivatePlayer(gameId) {
+  (getUserId()) == root.privatePlayers[getCurrentPrivatePlayerId(gameId)].userId
+}
+
+isGroupMember(groupId, gameId) {  
+  root.groups[groupId].players[getCurrentPublicPlayerId(gameId)]
+}
+
+isAdmin(gameId) {
+  root.games[gameId].adminUsers[getUserId()]
+}
+
+isAuthenticated() {
+  auth != null && auth.uid != null
+}
+
+isServer() {
+  false // Write rules are ignored by the server since it's running as an admin / with a database secret
+}
+
+writeLocked() {
+  root.writeLocked
+}
+
+isAuthenticatedMember(groupId, gameId) {
+  isAuthenticated() && (
+  isServer() ||
+  isAdmin(gameId) || 
+  isGroupMember(groupId, gameId))
+}
+
+/******************************************************************************
+ Complex Types
+******************************************************************************/
+
+type ChatRoom {
+  chatRoomId: ChatRoomId | Null; // #1
+  name: String;
+  withAdmins: Boolean;
+  gameId: GameId;
+  accessGroupId: GroupId | Null;
+  messages: Map<MessageId, Message> | Null;
+
+  read() {
+    true // isAuthenticatedMember(this.accessGroupId, this.gameId)
+  }
+
+  write() { !writeLocked() && isAuthenticatedMember(this.accessGroupId, this.gameId) }
+
+}
+
+type Message {
+  messageId: MessageId | Null; // #1
+  message: String | Null;
+  playerId: PublicPlayerId;
+  time: Timestamp;
+  image: ImageUrl | Null;
+  location: Location | Null;
+
+  read() {
+    true // isAuthenticatedMember(this.parent().accessGroupId, this.parent().gameId)
+  }
+
+  write() { !writeLocked() && isAuthenticatedMember(this.parent().accessGroupId, this.parent().gameId)   }
+
+}
+
+type Game {
+  gameId: GameId; // #1
+  active: Boolean;
+  name: String;
+  startTime: OptionalTimestamp;
+  endTime: OptionalTimestamp
+  registrationEndTime: OptionalTimestamp;
+  stunTimer: Number;
+  infectPoints: Number;
+  faqHtml: String;
+  rulesHtml: String;
+
+  adminUsers: Map<UserId, Boolean>;
+  chatRooms: Map<ChatRoomId, Boolean>;
+  missions: Map<MissionId, Boolean>;
+  guns: Map<GunId, Boolean>;
+  players: Map<PublicPlayerId, Boolean>;
+  rewardCategories: Map<RewardCategoryId, Boolean>;
+
+  // Everyone can read a game so they can add themselves
+  read() {
+    true // isAuthenticated() 
+  }
+
+  write() { !writeLocked() && isServer() }
+  
+  validate() {
+    true;
+  }
+}
+
+type Group {
+  groupId: GroupId; // #1
+  allegianceFilter: OptionalAllegiance;
+  autoAdd: Boolean;
+  autoRemove: Boolean;
+  canAddOthers: Boolean;
+  canAddSelf: Boolean;
+  canRemoveOthers: Boolean;
+  canRemoveSelf: Boolean;
+  gameId: GameId;
+  name: String;
+  ownerPlayerId: PublicPlayerId;
+  players: Map<PublicPlayerId, Boolean>;
+
+  read() {
+    true // isAuthenticatedMember(key(), this.gameId)
+  }
+  
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    root.games[this.gameId] != null
+  }
+}
+
+
+type Gun {
+  gunId: GunId; // #1
+  playerId: OptionalPlayerId;
+  gameId: OptionalGameId;
+  label: String;
+
+  read() {
+    true // isAuthenticated()
+  }  
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    this.label.length > 0
+  }
+}
+
+type Mission {
+  missionId: MissionId; // #1
+  beginTime: Timestamp;
+  endTime: Timestamp;
+  detailsHtml: String;
+  gameId: GameId;
+  accessGroupId: GroupId;
+  name: String;
+  rsvpersGroupId: GroupId;
+
+  read() {
+    true // isAuthenticatedMember(this.accessGroupId, this.gameId)
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    root.games[this.gameId] != null
+  }
+}
+
+type Volunteer {
+  admin: Boolean;
+  advertising: Boolean;
+  android: Boolean;
+  chronicler: Boolean;
+  cleric: Boolean;
+  client: Boolean;
+  communications: Boolean;
+  ios: Boolean;
+  logistics: Boolean;
+  moderator: Boolean;
+  photographer: Boolean;
+  server: Boolean;
+  sorcerer: Boolean;
+}
+
+type NotificationSettings {
+  sound: Boolean;
+  vibrate: Boolean;
+}
+
+type ChatRoomMembership {
+  a: Boolean | Null;
+  isVisible: Boolean | Null;
+  lastSeenTime: OptionalTimestamp;
+  lastHiddenTime: OptionalTimestamp;
+
+  validate() {
+    this.a || this.isVisible != null // this membership has to exist. old data has isVisible, new data has a
+  }
+}
+
+type Notification {
+  destination: HtmlUrl;
+  icon: String;
+  message: String;
+  previewMessage: String;
+  queuedNotificationId: QueuedNotificationId;
+  time: OptionalTimestamp
+}
+
+type PrivatePlayer {
+  beInPhotos: Boolean;
+  canInfect: Boolean;
+  gameId: GameId;
+  gotEquipment: Boolean;
+  needGun: Boolean;
+  notes: String;
+  notificationSettings: NotificationSettings;
+  notifications: Map<NotificationId, Notification>;
+  userId: UserId;
+  volunteer: Volunteer;
+  wantToBeSecretZombie: Boolean;
+  chatRoomMemberships: Map<ChatRoomId, ChatRoomMembership>;
+  missionMemberships: Map<MissionId, Boolean>;
+  associatedMaps: Map<MapId, Map<MarkerId, Boolean>>;
+
+  read() {
+    true // isAuthenticated() && (isServer() || getUserId() == this.userId || isAdmin(this.gameId))
+  }
+
+  write() {
+    !writeLocked() && (isServer() || getUserId() == this.userId)
+  }
+
+  validate() {
+    root.users[this.userId] != null
+  }
+}
+
+
+type Reward {
+  rewardId: RewardId; // #1
+  rewardCategoryId: RewardCategoryId;
+  time: Timestamp;
+  code: String;
+  playerId: OptionalPlayerId;
+
+  read() {
+    true // isAuthenticated()
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() { // #2
+    this.playerId == "" ||
+    root.publicPlayers[this.playerId] != null
+  }
+}
+
+type PublicPlayer {
+  publicPlayerId: PublicPlayerId; // #1
+  isActive: Boolean;
+  allegiance: Allegiance;
+  claims: Map<RewardId, Reward>;
+  name: String;
+  number: Number;
+  points: Number;
+  profileImageUrl: HtmlUrl;
+  userId: UserId;
+  privatePlayerId: PrivatePlayerId;
+  lives: Map<PublicLifeId, Boolean>
+
+  // Public players can be seen by all
+  read() {
+    true // isAuthenticated()
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    root.users[this.userId] != null
+  }
+}
+
+type RewardCategory {
+  rewardCategoryId: RewardCategoryId; // #1
+  badgeImageUrl: HtmlUrl;
+  claimed: Number;
+  description: String;
+  gameId: GameId;
+  limitPerPlayer: Number;
+  name: String;
+  points: Number;
+  rewards: Map<RewardId, Boolean>;
+  shortName: String;
+
+  read() {
+    true // isAuthenticated()
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    root.games[this.gameId] != null
+  }
+  
+}
+
+type Player {
+  gameId: GameId;
+}
+
+type GamePlayerLookup {
+  playerId: PublicPlayerId;
+}
+
+type User {
+  userId: UserId; // #1
+  a: Boolean;
+  publicPlayers: Map<PublicPlayerId, Player>;
+  games: Map<GameId, GamePlayerLookup>;
+
+  read() {
+    true // isServer() || key() == getUserId()
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    true;
+  }
+}
+
+type Marker {
+  color: String;
+  latitude: Number;
+  longitude: Number;
+  name: String;
+  playerId: PublicPlayerId 
+}
+
+type MapType {
+  mapId: MapId; // #1
+  accessGroupId: GroupId;
+  gameId: GameId;
+  markers: Map<MarkerId, Marker>;
+  name: String; 
+
+  read() {
+    true // isAuthenticated()
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    true;
+  }
+}
+
+type QueuedNotification {
+  queuedNotificationId: QueuedNotificationId; // #1
+  destintation: HtmlUrl;
+  email: Boolean;
+  gameId: GameId;
+  groupId: GroupId;
+  message: String;
+  mobile: Boolean;
+  previewMessage: String;
+  sent: Boolean;
+  size: Boolean;
+  sound: Boolean;
+  vibrate: Boolean;
+  
+  read() {
+    true // isAdmin(this.gameId)
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    true;
+  }
+}
+
+type PrivateLife {
+  privateLifeId: PrivateLifeId; // #1
+  code: String;
+  gameId: GameId;
+  read() {
+    true // isServer() || isPrivatePlayer(this.gameId) || isAdmin(this.gameId)
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    true;
+  }
+}
+
+type PublicLife {
+  publicLifeId: PublicLifeId; // #1
+  privateLifeId: PrivateLifeId;
+  gameId: GameId;
+  time: OptionalTimestamp;
+  read() {
+    true // isAuthenticated()
+  }
+
+  write() { !writeLocked() && isServer() }
+
+  validate() {
+    true;
+  }
+}
+
+
+/******************************************************************************
+ Possible Paths
+******************************************************************************/
+/chatRooms/{ChatRoomId} is ChatRoom;
+/chatRooms/{ChatRoomId}/messages {
+  index() {['time']}
+  write() { !writeLocked() && isAuthenticatedMember(this.parent().accessGroupId, this.parent().gameId)}
+}
+/chatRooms/ChatRoomId/messages/{MessageId} is Message;
+/games/{GameId} is Game;
+/games is PublicEntity;
+/games/GameId/adminUsers/{UserId} is User;
+/groups/{GroupId} is Group;
+/groups/GroupId/players/{PublicPlayerId} is PublicPlayer;
+/guns/{GunId} is Gun;
+/queuedNotifications/{QueuedNotificationId} is QueuedNotification;
+/maps/{MapId} is MapType;
+/missions/{MissionId} is Mission;
+/privatePlayers/{PrivatePlayerId} is PrivatePlayer;
+/privateLives/{PrivateLifeId} is PrivateLife;
+/publicPlayers/{PublicPlayerId} is PublicPlayer;
+/publicLives/{PublicLifeId} is PublicLife;
+/rewardCategories/{RewardCategoryId} is RewardCategory;
+/rewards/{RewardId} is RewardCategory;
+/users/{UserId} is User;
+/users/UserId/players/{PrivatePlayerId} is PrivatePlayer;

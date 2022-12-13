@@ -1,0 +1,103 @@
+<!--
+  Copyright 2017 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<dom-module id="ghvz-mission">
+<script>
+  // Not sure why this HTMLImports.whenReady is really needed.
+  // Something about polymer initialization order.
+  // I think we're not supposed to need this.
+  HTMLImports.whenReady(() => {
+    Polymer({
+      is: 'ghvz-mission',
+
+      properties: {
+        bridge: Object,
+
+        game: Object,
+
+        player: Object,
+
+        missionId: String,
+
+        mission: Object,
+
+        inGroup: Boolean,
+      },
+
+      observers: [
+        'onMissionIdChanged_(game.missions.*, missionId)',
+        'onMissionHtmlChanged_(mission.detailsHtml)',
+      ],
+
+      attached() {
+        this.fire('ghvz-set-card-header', {headerElement: this.$.name});
+      },
+
+      onMissionIdChanged_() {
+        this.$.selector.select(this.game.missionsById[this.missionId]);
+      },
+
+      onMissionHtmlChanged_(detailsHtml) {
+        this.$.mission.innerHTML = detailsHtml;
+      },
+
+      formatTime_(time) {
+        return Utils.formatTime(time);
+      },
+    });
+  });
+</script>
+<style>
+  :host {
+    display: block;
+  }
+  #missionControls {
+    display: flex;
+    align-items: center;
+  }
+  #time {
+    flex-grow: 1;
+  }
+  ghvz-rsvp {
+    flex-shrink: 0;
+  }
+</style>
+<template>
+  <array-selector id="selector" items="[[game.missions]]" selected="{{mission}}"></array-selector>
+
+  <div id="name">[[mission.name]]</div>
+
+  <!-- for webdrivers -->
+  <div style="height: 1px" name$="mission-[[mission.name]]"></div>
+  <div id="missionControls" name$="mission-controls-[[mission.name]]">
+    <div id="time">
+      Mission time:
+      <b>[[formatTime_(mission.beginTime)]]</b>
+      to
+      <b> [[formatTime_(mission.endTime)]]</b>
+    </div>
+    <!--ghvz-rsvp
+        id="rsvp"
+        bridge="[[bridge]]"
+        game="[[game]]"
+        player="[[player]]"
+        mission-id="[[missionId]]"
+        in-group="{{inGroup}}">
+    </ghvz-rsvp-->
+  </div>
+  <div id="mission" name$="mission-text-[[mission.name]]"></div>
+</template>
+</dom-module>
